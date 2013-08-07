@@ -11,8 +11,9 @@ SOURCES += \
     sqlexample.cpp \
     main.cpp \
     fast/reader/RawReader.cc \
-    fast/reader/main.cc \
-    fast/testpeakanalyzer.cpp
+    fast/reader/Reader.cc \
+    fast/testpeakanalyzer.cpp \
+    fast/reader/Reader.cc
 
 OTHER_FILES += \
     SConstruct \

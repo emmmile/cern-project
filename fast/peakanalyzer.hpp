@@ -7,7 +7,7 @@
 #include "window.hpp"
 using namespace std;
 
-enum status { START, BASELINE, PEAKRECORDING };
+enum status { START, BASELINE, PEAKRECORDING, GAMMAFLASH };
 
 ///
 /// \brief The peakanalyzer class searches for peaks in the raw data coming from a detector move,
@@ -46,7 +46,7 @@ public:
                 oldvalue = 0;
 
 
-                cout << "#time value baseline vthreshold dv dvthreshold " << endl;
+                //cout << "#time value baseline vthreshold dv dvthreshold " << endl;
         }
 
 
@@ -100,7 +100,7 @@ public:
                 case BASELINE:
                         baseline = alpha * value + ( 1.0 - alpha ) * baseline;
                         dvthreshold = beta * fabs ( dv - currentdv ) + ( 1.0 - beta ) * dvthreshold; // update the standard deviation for the derivative
-                        vthreshold = beta * fabs ( value - baseline ) + ( 1.0 - beta ) * vthreshold; // update the standard deviation for the values
+                        vthreshold = alpha * fabs ( value - baseline ) + ( 1.0 - alpha ) * vthreshold; // update the standard deviation for the values
 
 
                         if ( typecounter < typethreshold )
@@ -127,7 +127,7 @@ public:
                         // I simply empty the window to remember it.
                         if ( fabs ( value - baseline ) < 3 * max ( vthreshold, 1.0 ) ) {
                                 if ( last.good( baseline, vthreshold, detector_type ) ) {
-                                        cerr << "Good peak at " << last.minimum_time() << " [" << name << "].\n";
+                                        //cerr << "Good peak at " << last.minimum_time() << " [" << name << "].\n";
                                         cerr << last.minimum_integral(baseline) << " " << last.integral( baseline ) << endl;
                                         ++peaksnumber;
                                 } else {
@@ -144,7 +144,7 @@ public:
                 }
 
                 //cout.precision( 30 );
-                cout << time << " " << value << " " << baseline << " " << vthreshold << " " << dv << " " << dvthreshold << endl;
+                //cout << time << " " << value << " " << baseline << " " << vthreshold << " " << dv << " " << dvthreshold << endl;
         }
 
 

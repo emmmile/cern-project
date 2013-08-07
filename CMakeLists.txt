@@ -4,7 +4,6 @@ set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_FLAGS "-std=c++0x" )
 set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -rdynamic")
 #set( CMAKE_VERBOSE_MAKEFILE on )
-set(ADDITIONAL_MAKE_CLEAN_FILES "${CMAKE_SOURCE_DIR}/sample data/*.png")
 
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/dict.cxx ${CMAKE_CURRENT_BINARY_DIR}/dict.h
@@ -44,6 +43,10 @@ TARGET_LINK_LIBRARIES(histogram boost_program_options Gui Core Cint RIO Net Hist
 
 add_executable(testpeakanalyzer fast/testpeakanalyzer.cpp)
 TARGET_LINK_LIBRARIES(testpeakanalyzer boost_program_options)
+
+add_executable(rawreader fast/reader/RawReader.cc fast/reader/Reader.cc)
+TARGET_LINK_LIBRARIES(rawreader shift nsl crypt dl)
+
 
 
 #INCLUDE_DIRECTORIES("${BASEPATH}/boost/include")

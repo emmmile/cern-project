@@ -5,8 +5,8 @@
 *.dll
 *.exe
 *.o
-*.so
-*.a
+#*.so
+#*.a
 
 # Packages #
 ############
