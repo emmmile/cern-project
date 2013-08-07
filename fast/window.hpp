@@ -8,84 +8,107 @@ using namespace std;
 typedef unsigned int uint;
 
 
+enum type { POSITIVE, NEGATIVE, UNSET };
+
 ///
 /// \class window
 /// \brief This class represents a time window of values coming from a detector. It used, while analyzing the date,
 /// to remember a part of the data without having to read it again.
 ///
 template<class F>
-class window {
-  vector<F> __times;
-  vector<F> __values;
-  vector<F> __derivatives;
+class peakwindow {
+        vector<F> __times;
+        vector<F> __values;
 
 public:
-///
-/// Adds a triple to the window
-///
-  void push ( const F& time, const F& value, const F& dv ) {
-    __times.push_back ( time );
-    __values.push_back ( value );
-    __derivatives.push_back ( dv );
-  }
-
-///
-/// Clears the window.
-///
-  void clear ( ) {
-    __times.clear();
-    __values.clear();
-    __derivatives.clear();
-  }
-
-  uint size ( ) const {
-    return __times.size();
-  }
+        ///
+        /// Adds a triple to the window
+        ///
+        void push ( const F& time, const F& value ) {
+                __times.push_back ( time );
+                __values.push_back ( value );
+        }
 
 
-///
-/// \return the integral, referred to the argument baseline of the values present in the window.
-///
-  float integral ( float baseline ) const {
-    float out = 0.0;
-    for ( uint i = 1; i < __times.size(); ++i ) {
-      out += fabs( baseline - __values[i] ) * ( __times[i] - __times[i - 1] );
-    }
+        const F& time ( int index ) const {
+                return __times[index];
+        }
 
-    return out;
-  }
+        const F& value ( int index ) const {
+                return __values[index];
+        }
 
-  ///
-  /// \return a lower bound for the integral in the current window, to indentify a peak.
-  /// It is calculated as the area of a rectangle having width equal to the window and height of 1/4 the
-  /// maximum peak (computed with \ref minimum).
-  ///
-  float minimum_integral( ) const {
-    return fabs ( ( __values.back() - __values.front() ) * minimum() * 0.25 );
-  }
+        ///
+        /// Clears the window.
+        ///
+        void clear ( ) {
+                __times.clear();
+                __values.clear();
+        }
 
-  ///
-  /// \return the minumum value in the window.
-  ///
-  float minimum ( ) const {
-    return *min_element ( __values.begin(), __values.end() );
-  }
+        uint size ( ) const {
+                return __times.size();
+        }
 
-  ///
-  /// \return the time instant correspondent to the minimum value.
-  ///
-  float minimum_time ( ) const {
-    return __times[min_element ( __values.begin(), __values.end() ) - __values.begin()];
-  }
 
-  friend ostream& operator << ( ostream& out, const window& w ) {
-    for ( uint i = 0; i < w.__times.size(); ++i )
-      out << w.__times[i] << " " << w.__values[i] << " " << w.__derivatives[i] << endl;
+        ///
+        /// \return the integral, referred to the argument baseline of the values present in the window.
+        ///
+        F integral ( F baseline ) const {
+                F out = 0.0;
+                for ( uint i = 1; i < __times.size(); ++i ) {
+                        out += fabs( baseline - __values[i] ) * ( __times[i] - __times[i - 1] );
+                }
 
-    //out << "Total integral is " << w.integral() << endl;
-    out << "Minimum is " << w.minimum() << endl;
-    return out;
-  }
+                return out;
+        }
+
+        ///
+        /// \return a lower bound for the integral in the current window, to indentify a peak.
+        /// It is calculated as the area of a rectangle having width equal to the window and height of 1/4 the
+        /// maximum peak (computed with \ref minimum).
+        ///
+        F minimum_integral( const F& baseline ) const {
+                return ( __times.back() - __times.front() ) * fabs( baseline - minimum() ) * 0.25;
+        }
+
+        bool good ( const F& baseline, const F& vthreshold, type detector ) {
+                F step = 6 * max( vthreshold, 1.0 );
+
+                return integral( baseline ) > minimum_integral( baseline ) &&
+                       ( ( detector == NEGATIVE && fabs( minimum() - baseline ) > step ) ||
+                         ( detector == NEGATIVE && fabs( maximum() - baseline ) > step ) );
+        }
+
+        ///
+        /// \return the minumum value in the window.
+        ///
+        const F& minimum ( ) const {
+                return *min_element ( __values.begin(), __values.end() );
+        }
+
+        ///
+        /// \return the maximum value in the window.
+        ///
+        const F& maximum ( ) const {
+                return *max_element( __values.begin(), __values.end() );
+        }
+
+        ///
+        /// \return the time instant correspondent to the minimum value.
+        ///
+        F minimum_time ( ) const {
+                return __times[min_element ( __values.begin(), __values.end() ) - __values.begin()];
+        }
+
+        friend ostream& operator << ( ostream& out, const peakwindow& w ) {
+                for ( uint i = 0; i < w.__times.size(); ++i )
+                        out << w.__times[i] << " " << w.__values[i] << endl;
+
+                //out << "Total integral is " << w.integral() << endl;
+                out << "Minimum is " << w.minimum() << endl;
+                return out;
+        }
 };
 
 #endif // WINDOW_HPP

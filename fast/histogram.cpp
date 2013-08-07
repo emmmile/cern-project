@@ -15,21 +15,55 @@ run:
 #include <vector>
 #include <TFile.h>
 #include <string>
+#include <boost/program_options.hpp>
 using namespace std;
+using namespace boost::program_options;
 
-// for i in sample\ data/*.dat; do ./histogram "$i"; done
+//for i in sample\ data/*.dat; do ./histogram -i "$i" -o "$i".png; done
 
-int main ( int argc, char** argv )
-{
-        if ( argc < 2 ) {
-                cerr << "Give me a file." << endl;
-                exit ( 1 );
+int main ( int argc, char** argv ) {
+        string input, output = "histogram.png";
+
+        // Declare the supported program options
+        options_description desc("Allowed options");
+        desc.add_options()
+                        ("help,h", "produce this help message")
+                        ("input-data,i", value<string>(&input), "set the input data file, normally a .dat")
+                        ("output-image,o", value<string>(&output), "set the output location, default to ./histogram.png")
+                        ;
+
+        variables_map vm;
+
+        try {
+                store(parse_command_line(argc, argv, desc), vm);
+
+                if (vm.count("help")) {
+                        cout << desc << "\n";
+                        exit( 1 );
+                }
+
+
+                notify(vm);
+        } catch ( error& e ) {
+                cerr << desc << endl;
+                cerr << e.what() << endl;
+                exit( 1 );
         }
-        fstream sample ( argv[1] );
-        cout << "File: " << argv[1] << endl;
 
-        TCanvas *c = new TCanvas ( "c","Example",4000,3000 );
+
+        if (!vm.count("input-data")) {
+                cerr << desc << endl;
+                cerr << "option --input-data is required.\n";
+                exit( 1 );
+        }
+
+        fstream sample ( input );
+        //cout << "Reading from file: " << argv[1] << endl;
+
+        TCanvas *c = new TCanvas ( "c", "Sample", 1920, 900 );
         c->cd();
+        c->SetGridx();
+        c->SetGridy();
 
         vector<float> times;
         vector<float> values;
@@ -40,8 +74,8 @@ int main ( int argc, char** argv )
         }
 
         TGraph* gr = new TGraph ( times.size(), &times[0], &values[0] );
-        gr->SetTitle ( argv[1] );
-        gr->GetXaxis()->SetTitle ( "time" );
+        gr->SetTitle ( input.c_str() );
+        gr->GetXaxis()->SetTitle ( "time [ns]" );
         gr->GetYaxis()->SetTitle ( "value" );
         gr->GetXaxis()->SetLabelSize ( 0.02 );
         gr->GetYaxis()->SetLabelSize ( 0.02 );
@@ -53,8 +87,7 @@ int main ( int argc, char** argv )
         gr->SetLineColor ( kRed );
         gr->SetLineStyle ( 1 );
         c->Update();
-        string name = "" + string ( argv[1] ) + ".png";
-        c->SaveAs ( name.c_str() );
+        c->SaveAs ( output.c_str() );
 
         return 0;
 }
