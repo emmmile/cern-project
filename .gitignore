@@ -38,6 +38,12 @@ ehthumbs.db
 Thumbs.db
 
 
-# AFS
-#####
+# AFS #
+#######
 .__afs*
+
+
+# Qt Creator #
+##############
+*.pro.user*
+

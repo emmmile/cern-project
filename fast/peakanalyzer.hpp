@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sys/stat.h>
 #include <mutex>
+#include <cmath>
 #include "fast/window.hpp"
 using namespace std;
 

@@ -30,8 +30,8 @@ int main ( int argc, char** argv ) {
     desc.add_options()
         ("help,h", "produce this help message")
         ("format,f", value<string>(&format), "set date format")
-        ("start,s", value<string>(&start)->required(), "set starting date")
-        ("end,e", value<string>(&end)->required(), "set ending date")
+        ("start,s", value<string>(&start), "set starting date")
+        ("end,e", value<string>(&end), "set ending date")
         ("localdb,l", value<string>(&localdb), "set location of the local CASTOR db")
         ("db,d",value<string>(&dburl),"set the url for the SLOW data db")
     ;
@@ -51,6 +51,20 @@ int main ( int argc, char** argv ) {
     } catch ( error& e ) {
         cerr << desc << endl;
         cerr << e.what() << endl;
+        exit( 1 );
+    }
+
+
+    if (!vm.count("start")) {
+        cerr << desc << endl;
+        cerr << "option --start is required.\n";
+        exit( 1 );
+    }
+
+
+    if (!vm.count("end")) {
+        cerr << desc << endl;
+        cerr << "option --end is required.\n";
         exit( 1 );
     }
 
