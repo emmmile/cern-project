@@ -57,26 +57,26 @@
 
 class _BOS {
 public:
-  static const u_int size = sizeof(BOSHEADER)/sizeof(int);
-  BOSHEADER *bos;
-	 
-	_BOS();		 
- 	_BOS(u_int *ptr);		
-  _BOS(u_int *ptr,u_int title, u_int reVumber, u_int length);	
-  _BOS(u_int title, u_int revNumber,u_int length);
-	~_BOS();
-	BOSHEADER *getBOS();
-	void setBOS(u_int *ptr);
-	char *getTitle( );
-  u_int getIntTitle( ) {return bos->title.l;};
-  bool cmpTitle(u_int &myTitle) {return (bos->title.l == myTitle);};
-  u_int getRevNumber() {return bos->revNumber;};
-  u_int getLength() {return bos->length;};
-  u_int getFlag() {return bos->reserved;};
-  void setFlag(u_int flag) {bos->reserved = flag;};
-  bool writeToFile(int file);
-  bool readFromFile(f_i* file);
-  };
+        static const u_int size = sizeof(BOSHEADER)/sizeof(int);
+        BOSHEADER *bos;
+
+        _BOS();
+        _BOS(u_int *ptr);
+        _BOS(u_int *ptr,u_int title, u_int reVumber, u_int length);
+        _BOS(u_int title, u_int revNumber,u_int length);
+        ~_BOS();
+        BOSHEADER *getBOS();
+        void setBOS(u_int *ptr);
+        char *getTitle( );
+        u_int getIntTitle( ) {return bos->title.l;};
+        bool cmpTitle(u_int &myTitle) {return (bos->title.l == myTitle);};
+        u_int getRevNumber() {return bos->revNumber;};
+        u_int getLength() {return bos->length;};
+        u_int getFlag() {return bos->reserved;};
+        void setFlag(u_int flag) {bos->reserved = flag;};
+        bool writeToFile(int file);
+        bool readFromFile(f_i* file);
+};
 
 // -- RCTR -------------------------------------------------------------------
 // -- RCTR -------------------------------------------------------------------
@@ -84,28 +84,28 @@ public:
 
 
 class _BOS_RCTR : public _BOS
- {
- protected:
- struct tm *systemTime;
- RCTR_HEADER *rctr;
- vector<int> numberOfChannels;
+{
+protected:
+        struct tm *systemTime;
+        RCTR_HEADER *rctr;
+        vector<int> numberOfChannels;
 
- public:
- 	_BOS_RCTR();
- 	_BOS_RCTR(u_int runNumber,u_int runExtNumber);
-  ~_BOS_RCTR() {if (rctr) delete rctr;};
-  u_int getSize();
-	
-  RCTR_HEADER *getRCTR() { return rctr; }
-  u_int getRunNumber() {return rctr->runNumber; }
-  u_int getRunExtNumber() {return rctr->runExtNumber; }
-  u_int getRCTRDate() { return rctr->date; }
-  u_int getRCTRTime()  { return rctr->time; }
+public:
+        _BOS_RCTR();
+        _BOS_RCTR(u_int runNumber,u_int runExtNumber);
+        ~_BOS_RCTR() {if (rctr) delete rctr;};
+        u_int getSize();
 
-  void nextFile(u_int runNumber,u_int runExt);
-	bool writeToFile(int file);
-	bool readFromFile(_BOS *aBos,f_i *file);
- };
+        RCTR_HEADER *getRCTR() { return rctr; }
+        u_int getRunNumber() {return rctr->runNumber; }
+        u_int getRunExtNumber() {return rctr->runExtNumber; }
+        u_int getRCTRDate() { return rctr->date; }
+        u_int getRCTRTime()  { return rctr->time; }
+
+        void nextFile(u_int runNumber,u_int runExt);
+        bool writeToFile(int file);
+        bool readFromFile(_BOS *aBos,f_i *file);
+};
 
 
 // -- MODH ----------------------------------------------------------------------
@@ -113,7 +113,7 @@ class _BOS_RCTR : public _BOS
 
 
 /*\
- *	Here we define the module specific header 
+ *	Here we define the module specific header
  *	the settings for each module are the same
  * 	over the lifetime of the run
 \*/
@@ -122,40 +122,40 @@ class _BOS_RCTR : public _BOS
 
 class _BOS_MODH : public _BOS {
 
-	public:
-	
-//	_BOS_MODH() : _BOS() {};
-	_BOS_MODH( bool autoCreate = false ); //  : _BOS(ptr,*(u_int *)"MODH",modId,_MODH::size),
+public:
 
-  u_int numberOfChannels;
-  u_int numberOfStreams;
-  Config_V myConf[MAXNumberOfStreams];    		// run configuration: detektor id, card, channel and settings
+        //	_BOS_MODH() : _BOS() {};
+        _BOS_MODH( bool autoCreate = false ); //  : _BOS(ptr,*(u_int *)"MODH",modId,_MODH::size),
 
-	Config_V getConfigList(u_int streamNumber);
-  Channel_Config getConfigForChannel(u_int channel);
-  Channel_Config getConfigForStCrMoCh(u_int stream_crate_mod_ch);
-  int indexOf(u_int stream_crate_mod_ch);
-  void print();
-  bool writeToFile(int file);
-  bool readFromFile(_BOS* aBos,f_i *file);
-/*
+        u_int numberOfChannels;
+        u_int numberOfStreams;
+        Config_V myConf[MAXNumberOfStreams];    		// run configuration: detektor id, card, channel and settings
+
+        Config_V getConfigList(u_int streamNumber);
+        Channel_Config getConfigForChannel(u_int channel);
+        Channel_Config getConfigForStCrMoCh(u_int stream_crate_mod_ch);
+        int indexOf(u_int stream_crate_mod_ch);
+        void print();
+        bool writeToFile(int file);
+        bool readFromFile(_BOS* aBos,f_i *file);
+        /*
   Channel_Config getConfig(byte crate,byte module,byte channel);
   Channel_Config getConfig(u_int crate_mod_ch);
 
-	float getOffsetVoltage()  { return (( getLength() > 10 ) ? _MODH::getOffsetVoltage() : 0.0); }
-	u_int getStreamNumber(int lch);
- 	u_int getDetectorId(int lch);
+        float getOffsetVoltage()  { return (( getLength() > 10 ) ? _MODH::getOffsetVoltage() : 0.0); }
+        u_int getStreamNumber(int lch);
+        u_int getDetectorId(int lch);
   u_int getPhysModule(int lch);
-	u_int getPhysChannel(int lch);
-	u_int getDetectorChannel(int lch);
-	u_int getFullScale(int lch);
-	u_int getPreSample(int lch);
-	u_int getPostSample(int lch);
-	u_int getThreshold(int lch);
-	u_int getSampleRate(int lch);
-	u_int getSampleSize(int lch);
+        u_int getPhysChannel(int lch);
+        u_int getDetectorChannel(int lch);
+        u_int getFullScale(int lch);
+        u_int getPreSample(int lch);
+        u_int getPostSample(int lch);
+        u_int getThreshold(int lch);
+        u_int getSampleRate(int lch);
+        u_int getSampleSize(int lch);
   */
-//	void setBOS(u_int *ptr) { _BOS(ptr); }
+        //	void setBOS(u_int *ptr) { _BOS(ptr); }
 };
 
 // -- EVEH ----------------------------------------------------------------------
@@ -170,42 +170,42 @@ class _EVEH
  static const u_int size = sizeof(EVENT_HEADER)/sizeof(u_int);	// in longwords
  EVENT_HEADER *eveh;
 
-  	_EVEH(u_int *ptr);
-  	_EVEH(u_int *ptr,u_int exparg,u_int runarg,u_int eventarg);
+        _EVEH(u_int *ptr);
+        _EVEH(u_int *ptr,u_int exparg,u_int runarg,u_int eventarg);
 
-	void setEventSize(u_int arg);
+        void setEventSize(u_int arg);
 
-	u_int getExp();
-	u_int getRunNumber();
-	
-	u_int getDate();
-	u_int getTime();
-	u_int getEventNumber();
-	u_int getEventSize();
+        u_int getExp();
+        u_int getRunNumber();
+
+        u_int getDate();
+        u_int getTime();
+        u_int getEventNumber();
+        u_int getEventSize();
  };
 */
 class _BOS_EVEH : public _BOS  {
-  struct tm *systemTime;
-  EVENT_HEADER *eveh;
+        struct tm *systemTime;
+        EVENT_HEADER *eveh;
 
- 	public:
-	
- 	static const u_int size = _BOS::size+sizeof(EVENT_HEADER)/sizeof(int);	// in longwords
+public:
 
-  _BOS_EVEH() : _BOS() {eveh=new EVENT_HEADER;};
- 	_BOS_EVEH(u_int eventNumber,u_int runNumber);
-  ~_BOS_EVEH() { if (eveh) delete eveh;};
+        static const u_int size = _BOS::size+sizeof(EVENT_HEADER)/sizeof(int);	// in longwords
 
-	void setEventSize(u_int arg) {eveh->sizeOfEvent=arg;};
+        _BOS_EVEH() : _BOS() {eveh=new EVENT_HEADER;};
+        _BOS_EVEH(u_int eventNumber,u_int runNumber);
+        ~_BOS_EVEH() { if (eveh) delete eveh;};
 
-	u_int getEventSize() { return eveh->sizeOfEvent; }
-	u_int getEventNumber() { return eveh->eventNumber; }
-	u_int getRunNumber() { return eveh->runNumber; }
-	u_int getDate() { return eveh->date; }
-	u_int getTime() { return eveh->time; }
+        void setEventSize(u_int arg) {eveh->sizeOfEvent=arg;};
 
-	u_int writeToFile(int file);
-	bool  readFromFile(_BOS *aBos,f_i *file);
+        u_int getEventSize() { return eveh->sizeOfEvent; }
+        u_int getEventNumber() { return eveh->eventNumber; }
+        u_int getRunNumber() { return eveh->runNumber; }
+        u_int getDate() { return eveh->date; }
+        u_int getTime() { return eveh->time; }
+
+        u_int writeToFile(int file);
+        bool  readFromFile(_BOS *aBos,f_i *file);
 };
 
 
@@ -214,22 +214,22 @@ class _BOS_EVEH : public _BOS  {
 
 
 class _BOS_ACQC : public _BOS
- {
- ACQC_HEADER *acqc;
- public:
- 	_BOS_ACQC();
- 	_BOS_ACQC(Channel_Config* channel);
- 	~_BOS_ACQC() {if (acqc) delete acqc;};
- 	static const u_int size = _BOS::size+sizeof(ACQC_HEADER)/sizeof(int);	// in longwords
+{
+        ACQC_HEADER *acqc;
+public:
+        _BOS_ACQC();
+        _BOS_ACQC(Channel_Config* channel);
+        ~_BOS_ACQC() {if (acqc) delete acqc;};
+        static const u_int size = _BOS::size+sizeof(ACQC_HEADER)/sizeof(int);	// in longwords
 
-  	void setConfigData(Channel_Config* channel);
-  	void setDataSize(u_int dwords) {bos->length=dwords+sizeof(ACQC_HEADER)/sizeof(int);};
+        void setConfigData(Channel_Config* channel);
+        void setDataSize(u_int dwords) {bos->length=dwords+sizeof(ACQC_HEADER)/sizeof(int);};
 
-  	u_int getStCrMoCh() {return acqc->stream_crate_mod_ch;};
-  	u_int getDetectorChannel() {return acqc->detectorChannel;};
-  	bool writeToFile(int file);
-  	bool readFromFile(_BOS *aBos,f_i *file);
- };
+        u_int getStCrMoCh() {return acqc->stream_crate_mod_ch;};
+        u_int getDetectorChannel() {return acqc->detectorChannel;};
+        bool writeToFile(int file);
+        bool readFromFile(_BOS *aBos,f_i *file);
+};
 
 
 // -- INDX ----------------------------------------------------------------------
@@ -242,36 +242,36 @@ class _BOS_ACQC : public _BOS
 // in rising order with the streams
 
 class _BOS_INDX : public _BOS
- {
- u_int streamPosition[MAXNumberOfStreams];
- public:
- 	_BOS_INDX();
-  u_int getSize() {return _BOS::size+bos->length;};
-  void  setPosition(u_int streamNumber,u_int position);
-  u_int getPosition(u_int streamNumber);
-  u_int* getList()  { return &(streamPosition[0]);} ;
-  bool writeToFile(int file);
-	bool readFromFile(_BOS *aBos,f_i *file);
-	
- };
+{
+        u_int streamPosition[MAXNumberOfStreams];
+public:
+        _BOS_INDX();
+        u_int getSize() {return _BOS::size+bos->length;};
+        void  setPosition(u_int streamNumber,u_int position);
+        u_int getPosition(u_int streamNumber);
+        u_int* getList()  { return &(streamPosition[0]);} ;
+        bool writeToFile(int file);
+        bool readFromFile(_BOS *aBos,f_i *file);
+
+};
 
 // -- BEAM ----------------------------------------------------------------------
 // -- BEAM ----------------------------------------------------------------------
 class _BOS_BEAM : public _BOS
- {
- float data[2];  // first date, then intensity
- int   type;     // beam coming from EASTC, TOF, reading failed (beamEASTC, beamTOF, beamInvd)
- public:
- 	static const u_int size = _BOS::size+2;	// in longwords
- 	_BOS_BEAM() : _BOS(*(u_int *)"BEAM",1,3) {type=0;};
-//  void setAttr(float aDate,float aIntensity);
-  void setAttr(float aDate,float aIntensity,int type);
-  float* getList() {return &(data[0]);};
-  int    getType() {return type;};
-  bool writeToFile(int file);
-	bool readFromFile(_BOS *aBos,f_i *file);
-	
- };
+{
+        float data[2];  // first date, then intensity
+        int   type;     // beam coming from EASTC, TOF, reading failed (beamEASTC, beamTOF, beamInvd)
+public:
+        static const u_int size = _BOS::size+2;	// in longwords
+        _BOS_BEAM() : _BOS(*(u_int *)"BEAM",1,3) {type=0;};
+        //  void setAttr(float aDate,float aIntensity);
+        void setAttr(float aDate,float aIntensity,int type);
+        float* getList() {return &(data[0]);};
+        int    getType() {return type;};
+        bool writeToFile(int file);
+        bool readFromFile(_BOS *aBos,f_i *file);
+
+};
 
 
 struct slow_hv {u_int stream_crate_mod_ch;float voltage;};
@@ -279,68 +279,68 @@ struct slow_sv {u_int identifier;float value;};
 // -- SLOW ----------------------------------------------------------------------
 // -- SLOW ----------------------------------------------------------------------
 class _BOS_SLOW : public _BOS
- {
- u_int numberOfHVValues;
- u_int numberOfLVValues;
- u_int numberOfSpecialValues;
- slow_hv* hvList;
- vector <slow_sv > svList;
- void setBosLength();
- public:
-// 	static const u_int size = _BOS::size;	// in longwords
+{
+        u_int numberOfHVValues;
+        u_int numberOfLVValues;
+        u_int numberOfSpecialValues;
+        slow_hv* hvList;
+        vector <slow_sv > svList;
+        void setBosLength();
+public:
+        // 	static const u_int size = _BOS::size;	// in longwords
 
- 	_BOS_SLOW();// : _BOS(*(u_int *)"SLOW",0,0) {numberOfHVValues=0;hvList=NULL;};
-  ~_BOS_SLOW() {delete hvList;};
-  bool writeToFile(int file);
-	bool readFromFile(_BOS *aBos,f_i *file);
-  // HV values
-  void setNumberOfHVValues(u_int number);
-  void setHVValue(u_int index,u_int StCrMoCh,float value);
-  // LV values
-  // special values
-  void setSpecialValue(u_int Ident,float val);
-  int getNumberOfSpecialValues() { return svList.size();};
-  int getSpecialValueName(unsigned int index) {if (index>=svList.size()) return 0;return svList[index].identifier;};
-  float getSpecialValue(unsigned int index) {if (index>=svList.size()) return 0;return svList[index].value;};
-  };
+        _BOS_SLOW();// : _BOS(*(u_int *)"SLOW",0,0) {numberOfHVValues=0;hvList=NULL;};
+        ~_BOS_SLOW() {delete hvList;};
+        bool writeToFile(int file);
+        bool readFromFile(_BOS *aBos,f_i *file);
+        // HV values
+        void setNumberOfHVValues(u_int number);
+        void setHVValue(u_int index,u_int StCrMoCh,float value);
+        // LV values
+        // special values
+        void setSpecialValue(u_int Ident,float val);
+        int getNumberOfSpecialValues() { return svList.size();};
+        int getSpecialValueName(unsigned int index) {if (index>=svList.size()) return 0;return svList[index].identifier;};
+        float getSpecialValue(unsigned int index) {if (index>=svList.size()) return 0;return svList[index].value;};
+};
 
 // -- INFO ----------------------------------------------------------------------
 // -- INFO ----------------------------------------------------------------------
 class _BOS_INFO : public _BOS
- {
- char* data;
- public:
- 	static const u_int size = _BOS::size;	// in longwords
- 	_BOS_INFO() : _BOS(*(u_int *)"INFO",0,0) {data=NULL;};
-  ~_BOS_INFO() {delete data;};
+{
+        char* data;
+public:
+        static const u_int size = _BOS::size;	// in longwords
+        _BOS_INFO() : _BOS(*(u_int *)"INFO",0,0) {data=NULL;};
+        ~_BOS_INFO() {delete data;};
 
-  void setData(char* aData,u_int aDataSize);
-  char* getData() {return data;};
+        void setData(char* aData,u_int aDataSize);
+        char* getData() {return data;};
 
-  bool writeToFile(int file);
-	bool readFromFile(_BOS *aBos,f_i *file);
-  };
+        bool writeToFile(int file);
+        bool readFromFile(_BOS *aBos,f_i *file);
+};
 
 // -- HIVO ----------------------------------------------------------------------
 // -- HIVO ----------------------------------------------------------------------
 class _BOS_HIVO : public _BOS
- {
- char* data;
- int dataSize;  // in bytes
- public:
-  int colCount;
-  int rowCount;
+{
+        char* data;
+        int dataSize;  // in bytes
+public:
+        int colCount;
+        int rowCount;
 
- 	static const u_int size = _BOS::size;	// in longwords
- 	_BOS_HIVO() : _BOS(*(u_int *)"HIVO",0,0) {data=NULL;};
-  ~_BOS_HIVO() {delete data;};
+        static const u_int size = _BOS::size;	// in longwords
+        _BOS_HIVO() : _BOS(*(u_int *)"HIVO",0,0) {data=NULL;};
+        ~_BOS_HIVO() {delete data;};
 
-  void setData(char* aData,u_int aDataSize);
-  char* getData() {return data;};
+        void setData(char* aData,u_int aDataSize);
+        char* getData() {return data;};
 
-  bool writeToFile(int file);
-  bool readFromFile(_BOS *aBos,f_i *file);
-  };
+        bool writeToFile(int file);
+        bool readFromFile(_BOS *aBos,f_i *file);
+};
 
 
 /*\
@@ -357,15 +357,15 @@ class _TEMP {
  public:
  static const u_int size          = sizeof(TEMP_HEADER)/sizeof(int);
 
-	_TEMP();
-	_TEMP(u_int *ptr);
-	_TEMP(u_int *ptr,u_int runarg);
-	
-	TEMP_HEADER *getRCTR();
-	u_int getRunNumber();
-	u_int getRCTRDate();
-	u_int getRCTRTime();
-	
+        _TEMP();
+        _TEMP(u_int *ptr);
+        _TEMP(u_int *ptr,u_int runarg);
+
+        TEMP_HEADER *getRCTR();
+        u_int getRunNumber();
+        u_int getRCTRDate();
+        u_int getRCTRTime();
+
  };
 
 
@@ -373,15 +373,15 @@ class _BOS_TEMP : public _BOS, public _TEMP
  {
  public:
  static const u_int size = _BOS::size+_TEMP::size;	// in longwords
- 	_BOS_TEMP() {}
- 	_BOS_TEMP(u_int *ptr):_BOS(ptr), _TEMP(ptr+_BOS::size) {}
- 	_BOS_TEMP(u_int *ptr, u_int runarg) :
-	_BOS(ptr,*(u_int *)"TEMP",runarg,_TEMP::size),
-	_TEMP(ptr+_BOS::size,runarg){}
+        _BOS_TEMP() {}
+        _BOS_TEMP(u_int *ptr):_BOS(ptr), _TEMP(ptr+_BOS::size) {}
+        _BOS_TEMP(u_int *ptr, u_int runarg) :
+        _BOS(ptr,*(u_int *)"TEMP",runarg,_TEMP::size),
+        _TEMP(ptr+_BOS::size,runarg){}
  };
 
   */
-	
+
 #endif
 
-	
+

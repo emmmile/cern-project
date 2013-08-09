@@ -14,7 +14,10 @@ SOURCES += \
     fast/reader/Reader.cc \
     fast/testpeakanalyzer.cpp \
     fast/reader/Reader.cc \
-    gzstream/gzstream.C
+    gzstream/gzstream.C \
+    fast/completereader/unpackx.cpp \
+    fast/completereader/unpack.cpp \
+    fast/completereader/header.cpp
 
 OTHER_FILES += \
     SConstruct \
@@ -38,5 +41,7 @@ HEADERS += \
     Linkdef.h \
     fast/castor.hpp \
     gzstream/gzstream.h \
-    correlation.hpp
+    correlation.hpp \
+    fast/completereader/header.h \
+    fast/completereader/DaqType.h
 
