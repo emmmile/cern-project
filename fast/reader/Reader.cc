@@ -5,6 +5,7 @@
 
 #include <fstream>
 #include "RawReader.hh"
+#include "gzstream/gzstream.h"
 #define CASTORDIR "/castor/cern.ch/ntof/2012/fission/"
 using namespace std;
 
@@ -48,19 +49,26 @@ int main(int argc, char **argv)
         theRunReader->SetRunNumber(RunN);
         theRunReader->SetSegmentNumber(NSegment);
 
+        if ( !theRunReader->GetStructure() ) {
+                cout<<"Unable to call GetStructure()\n";
+                return 1;
+        }
+
         // Check number of events in the file
         TotalNEvents=theRunReader->Init();
         if(TotalNEvents<0)
                 return 1;
-        //  else
-        //     cout<<"Total number of events in this file: "<<TotalNEvents<<endl;
+        else
+                cout<<"Total number of events in this file: "<<TotalNEvents<<endl;
         theACQCInfo=theRunReader->GetACQCInfo();
 
         // Determine number of signals in each event, loop over events and save all signals into a file
         int i=0, j=0;
         char foutname[100];
         double first_channel = 0, channelwidth = 0, first_time = 0, last_time = 0;
-        FILE *fout;
+        //FILE *fout;
+        ogzstream* fout;
+
         // Loop over events
         for(theEventN=firstevent; theEventN<=TotalNEvents; theEventN++)
         {
@@ -74,7 +82,9 @@ int main(int argc, char **argv)
                 {
                         sprintf(foutname,"./%s%d_r%d_segm%d_ev%d%d.dat",DetName.c_str(),DetID, RunN, NSegment,theEventN,theSignalN);
                         printf("Reading and Writing into: %s\n", foutname);
-                        fout = fopen(foutname,"w+");
+                        //fout = fopen(foutname,"w+");
+                        fout = new ogzstream( foutname );
+
                         //printf("Reading/Writing: Run %d %s %d Event %d Signal %d\n",RunN,DetName.c_str(),DetID,theEventN,theSignalN);
                         theSignalInfo=theACQCInfo->theSignal[theSignalN-1];
                         first_channel=theSignalInfo->TimeStamp-theRunReader->GetPreSamples();
@@ -83,11 +93,13 @@ int main(int argc, char **argv)
                         last_time=(first_channel+theSignalInfo->PulseLength-0.5)*channelwidth;
                         //printf( "%lf %lf %lf %lf\n", first_channel, channelwidth, first_time, last_time );
                         for(unsigned int i=0;i<theSignalInfo->PulseLength;i++) {
-                                if ( int( i*channelwidth ) % 5 != 0 ) break;
-                                if ( int( (double)first_time+i*channelwidth ) % 5 != 0 ) break;
-                                fprintf(fout,"%lf %lf\n",(double)first_time+i*channelwidth,(double)theSignalInfo->data[i]);
+                                //fprintf(fout,"%lf %lf\n",(double)first_time+i*channelwidth,(double)theSignalInfo->data[i]);
+                                fout->precision( 30 );
+                                (*fout) << (double)first_time+i*channelwidth << " " << (double)theSignalInfo->data[i] << endl;
                         }
-                        fclose(fout);
+                        //fclose(fout);
+                        fout->close();
+                        delete fout;
                 }
         }
         return 0;

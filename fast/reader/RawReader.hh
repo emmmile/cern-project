@@ -18,15 +18,15 @@ class BOSHead{
 
 public:
 
-  BOSHead(){}
-  ~BOSHead(){}
+        BOSHead(){}
+        ~BOSHead(){}
 
-  int Read(int fd);
+        int Read(int fd);
 
-  char BankName[5];
-  int RevisionNumber;
-  int Reserved;
-  int NWords;
+        char BankName[5];
+        int RevisionNumber;
+        int Reserved;
+        int NWords;
 };
 
 
@@ -34,33 +34,33 @@ class ChannelInfo{
 
 public:
 
-  ChannelInfo(){}
-  ~ChannelInfo(){}
+        ChannelInfo(){}
+        ~ChannelInfo(){}
 
-  int Read(int fd);
-  int SaveInfo(ofstream &out);
+        int Read(int fd);
+        int SaveInfo(ofstream &out);
 
-  char DetType[5];
-  int DetID;
-  char ModuleType[5];
-  char channel;
-  char module;
-  char chassis;
-  char stream;
-  int SampleRate;
-  int SampleSize;
-  int FullScale;
-  int DelayTime;
-  int Threshold;
-  int ThSign;
-  float Offset;
-  int PreSample;
-  int PostSample;
-  char ClockState[5];
+        char DetType[5];
+        int DetID;
+        char ModuleType[5];
+        char channel;
+        char module;
+        char chassis;
+        char stream;
+        int SampleRate;
+        int SampleSize;
+        int FullScale;
+        int DelayTime;
+        int Threshold;
+        int ThSign;
+        float Offset;
+        int PreSample;
+        int PostSample;
+        char ClockState[5];
 
-  friend ostream& operator<< ( ostream& out, ChannelInfo& a ) {
-    return out << a.DetType << " " << a.DetID;
-  }
+        friend ostream& operator<< ( ostream& out, ChannelInfo& a ) {
+                return out << a.DetType << " " << a.DetID;
+        }
 };
 
 
@@ -69,21 +69,21 @@ class ModuleInfo{
 
 public:
 
-  ModuleInfo();
-  ~ModuleInfo();
+        ModuleInfo();
+        ~ModuleInfo();
 
-  int Read(int fd);
-  int SaveInfo(char* filename);
-  int GetChannelNumber(string DetName,int DetID);
+        int Read(int fd);
+        int SaveInfo(char* filename);
+        int GetChannelNumber(string DetName,int DetID);
 
-  BOSHead theBOSHead;
-  int NChannels;
-  ChannelInfo* theChannelInfo;
+        BOSHead theBOSHead;
+        int NChannels;
+        ChannelInfo* theChannelInfo;
 
-  friend ostream& operator<< ( ostream& out, ModuleInfo& a ) {
-    for ( int i = 0; i < a.NChannels; ++i ) out << a.theChannelInfo[i] << endl;
-    return out;
-  }
+        friend ostream& operator<< ( ostream& out, ModuleInfo& a ) {
+                for ( int i = 0; i < a.NChannels; ++i ) out << a.theChannelInfo[i] << endl;
+                return out;
+        }
 };
 
 //---------------------------------------------------------
@@ -97,26 +97,26 @@ class DataStreamPos{
 
 public:
 
-  DataStreamPos(){}
-  ~DataStreamPos(){}
+        DataStreamPos(){}
+        ~DataStreamPos(){}
 
-  int Read(int fd);
-  int GetRunHeaderPos(){return RunHeaderPos;}
-  int GetModuleHeaderPos(){return ModuleHeaderPos;}
-  int GetEventHeaderPos(int nevent);
-  int GetNEvents();
-  int GetChannelPos(int nEvent,int nChannel);
-  int GetNChannels(int nEvent);
-  int SaveInfo(char* filename);
-  int ReadSavedInfo(char* filename);
+        int Read(int fd);
+        int GetRunHeaderPos(){return RunHeaderPos;}
+        int GetModuleHeaderPos(){return ModuleHeaderPos;}
+        int GetEventHeaderPos(int nevent);
+        int GetNEvents();
+        int GetChannelPos(int nEvent,int nChannel);
+        int GetNChannels(int nEvent);
+        int SaveInfo(char* filename);
+        int ReadSavedInfo(char* filename);
 
-  int RunHeaderPos;
-  int ModuleHeaderPos;
-  int EventHeaderPos[RRMAXEVENTSINFILE];
-  int ChannelHeaderPos[RRMAXEVENTSINFILE][RRMAXNCHANNELS+1];
-  BOSHead theBOSHead;
-  int FileSize;
-  int NEvents;
+        int RunHeaderPos;
+        int ModuleHeaderPos;
+        int EventHeaderPos[RRMAXEVENTSINFILE];
+        int ChannelHeaderPos[RRMAXEVENTSINFILE][RRMAXNCHANNELS+1];
+        BOSHead theBOSHead;
+        int FileSize;
+        int NEvents;
 };
 
 
@@ -125,16 +125,16 @@ class SignalInfo{
 
 public:
 
-  SignalInfo();
-  ~SignalInfo();
+        SignalInfo();
+        ~SignalInfo();
 
-  int Read(int fd);
-  int Write(ofstream &out);
-  void SwapBytes();
+        int Read(int fd);
+        int Write(ofstream &out);
+        void SwapBytes();
 
-  unsigned int TimeStamp;
-  unsigned int PulseLength;
-  unsigned char* data; 
+        unsigned int TimeStamp;
+        unsigned int PulseLength;
+        unsigned char* data;
 };
 
 
@@ -145,22 +145,22 @@ class ACQCInfo{
 
 public:
 
-  ACQCInfo();
-  ~ACQCInfo();
+        ACQCInfo();
+        ~ACQCInfo();
 
-  int Read(int fd);
-  int PrintInfo();
+        int Read(int fd);
+        int PrintInfo();
 
-  BOSHead theBOSHead;
-  char DetectorName[5];
-  int DetectorID;
-  char channel,module,chassis,stream;
-  int NSignals;
-  SignalInfo* theSignal[RRMAXNSIGNALS];
+        BOSHead theBOSHead;
+        char DetectorName[5];
+        int DetectorID;
+        char channel,module,chassis,stream;
+        int NSignals;
+        SignalInfo* theSignal[RRMAXNSIGNALS];
 
-  friend ostream& operator<< ( ostream& out, ACQCInfo& a ) {
-    return out << a.DetectorName << " " << a.DetectorID << " " << a.NSignals;
-  }
+        friend ostream& operator<< ( ostream& out, ACQCInfo& a ) {
+                return out << a.DetectorName << " " << a.DetectorID << " " << a.NSignals;
+        }
 };
 
 
@@ -169,42 +169,42 @@ public:
 
 class RunReader{
 
- public:
-  RunReader();
-  ~RunReader();
+public:
+        RunReader();
+        ~RunReader();
 
-  void SetDirName(string dirname){DirName=dirname;}
-  void SetDetName(string detname){DetName=detname;}
-  void SetDetID(int detid){DetID=detid;}
-  void SetRunNumber(int run){RunN=run;}
-  void SetSegmentNumber(int seg){SegmentN=seg;}
+        void SetDirName(string dirname){DirName=dirname;}
+        void SetDetName(string detname){DetName=detname;}
+        void SetDetID(int detid){DetID=detid;}
+        void SetRunNumber(int run){RunN=run;}
+        void SetSegmentNumber(int seg){SegmentN=seg;}
 
-  ModuleInfo* GetStructure ();
-  int Init();
-  int TakeEvent(int event);
+        ModuleInfo* GetStructure ();
+        int Init();
+        int TakeEvent(int event);
 
-  ACQCInfo* GetACQCInfo(){return &theACQCInfo;}
-  int GetPreSamples(){return theModuleInfo->theChannelInfo[ChannelN].PreSample;}
-  int GetSampleRate(){return theModuleInfo->theChannelInfo[ChannelN].SampleRate;}
-  int GetSampleSize(){return theModuleInfo->theChannelInfo[ChannelN].SampleSize;}
-  ChannelInfo* GetChannelInfo(){return &(theModuleInfo->theChannelInfo[ChannelN]);}
+        ACQCInfo* GetACQCInfo(){return &theACQCInfo;}
+        int GetPreSamples(){return theModuleInfo->theChannelInfo[ChannelN].PreSample;}
+        int GetSampleRate(){return theModuleInfo->theChannelInfo[ChannelN].SampleRate;}
+        int GetSampleSize(){return theModuleInfo->theChannelInfo[ChannelN].SampleSize;}
+        ChannelInfo* GetChannelInfo(){return &(theModuleInfo->theChannelInfo[ChannelN]);}
 
-  string DirName;
-  string DetName;
-  int DetID;
-  int RunN;
-  int SegmentN;
+        string DirName;
+        string DetName;
+        int DetID;
+        int RunN;
+        int SegmentN;
 
-  char filename[100];
-  int StreamN;
-  int ChannelN;
-  int ACQCChannelN;
-  int fd;
-  int NEvents;
+        char filename[100];
+        int StreamN;
+        int ChannelN;
+        int ACQCChannelN;
+        int fd;
+        int NEvents;
 
-  ModuleInfo* theModuleInfo;
-  DataStreamPos* theStreampos;
-  ACQCInfo theACQCInfo;
+        ModuleInfo* theModuleInfo;
+        DataStreamPos* theStreampos;
+        ACQCInfo theACQCInfo;
 
 };
 

@@ -128,7 +128,7 @@ public:
                         if ( fabs ( value - baseline ) < 3 * max ( vthreshold, 1.0 ) ) {
                                 if ( last.good( baseline, vthreshold, detector_type ) ) {
                                         //cerr << "Good peak at " << last.minimum_time() << " [" << name << "].\n";
-                                        cerr << last.minimum_integral(baseline) << " " << last.integral( baseline ) << endl;
+                                        //cerr << last.minimum_integral(baseline) << " " << last.integral( baseline ) << endl;
                                         ++peaksnumber;
                                 } else {
                                         updatewindow();

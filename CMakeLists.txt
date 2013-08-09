@@ -26,6 +26,9 @@ LINK_DIRECTORIES("/afs/cern.ch/sw/lcg/app/releases/ROOT/5.34.03/x86_64-slc5-gcc4
 INCLUDE_DIRECTORIES("${BASEPATH}/mysql/include")
 LINK_DIRECTORIES("${BASEPATH}/mysql/lib")
 
+
+INCLUDE_DIRECTORIES("${BASEPATH}/gzstream")
+
 add_executable(main main.cpp fast/reader/RawReader.cc dict.cxx)
 add_dependencies(main dictionary)
 
@@ -36,16 +39,16 @@ TARGET_LINK_LIBRARIES(main Gui Core Cint RIO Net Hist Graf Graf3d Gpad Tree Rint
 
 
 
-add_executable(histogram fast/histogram.cpp)
+add_executable(histogram fast/histogram.cpp gzstream/gzstream.C)
 
-TARGET_LINK_LIBRARIES(histogram boost_program_options Gui Core Cint RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread)
+TARGET_LINK_LIBRARIES(histogram z boost_program_options Gui Core Cint RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread)
 
 
-add_executable(testpeakanalyzer fast/testpeakanalyzer.cpp)
-TARGET_LINK_LIBRARIES(testpeakanalyzer boost_program_options)
+add_executable(testpeakanalyzer fast/testpeakanalyzer.cpp gzstream/gzstream.C)
+TARGET_LINK_LIBRARIES(testpeakanalyzer boost_program_options z)
 
-add_executable(rawreader fast/reader/RawReader.cc fast/reader/Reader.cc)
-TARGET_LINK_LIBRARIES(rawreader shift nsl crypt dl)
+add_executable(rawreader fast/reader/RawReader.cc fast/reader/Reader.cc gzstream/gzstream.C)
+TARGET_LINK_LIBRARIES(rawreader shift nsl crypt dl z)
 
 
 

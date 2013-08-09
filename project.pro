@@ -13,7 +13,8 @@ SOURCES += \
     fast/reader/RawReader.cc \
     fast/reader/Reader.cc \
     fast/testpeakanalyzer.cpp \
-    fast/reader/Reader.cc
+    fast/reader/Reader.cc \
+    gzstream/gzstream.C
 
 OTHER_FILES += \
     SConstruct \
@@ -35,5 +36,7 @@ HEADERS += \
     dateutils.hpp \
     gui.hpp \
     Linkdef.h \
-    fast/castor.hpp
+    fast/castor.hpp \
+    gzstream/gzstream.h \
+    correlation.hpp
 

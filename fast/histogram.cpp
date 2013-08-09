@@ -15,6 +15,7 @@ run:
 #include <vector>
 #include <TFile.h>
 #include <string>
+#include "gzstream/gzstream.h"
 #include <boost/program_options.hpp>
 using namespace std;
 using namespace boost::program_options;
@@ -23,6 +24,7 @@ using namespace boost::program_options;
 
 int main ( int argc, char** argv ) {
         string input, output = "histogram.png";
+        bool gzip = false;
 
         // Declare the supported program options
         options_description desc("Allowed options");
@@ -30,6 +32,7 @@ int main ( int argc, char** argv ) {
                         ("help,h", "produce this help message")
                         ("input-data,i", value<string>(&input), "set the input data file, normally a .dat")
                         ("output-image,o", value<string>(&output), "set the output location, default to ./histogram.png")
+                        ("compressed,c", "use compressed input (default is uncompressed)")
                         ;
 
         variables_map vm;
@@ -57,7 +60,14 @@ int main ( int argc, char** argv ) {
                 exit( 1 );
         }
 
-        fstream sample ( input );
+        if (vm.count("compressed"))
+                gzip = true;
+
+
+        istream* sample;
+        if ( !gzip )
+                sample = new ifstream( input );
+        else    sample = new igzstream( input );
         //cout << "Reading from file: " << argv[1] << endl;
 
         TCanvas *c = new TCanvas ( "c", "Sample", 1920, 900 );
@@ -68,7 +78,7 @@ int main ( int argc, char** argv ) {
         vector<float> times;
         vector<float> values;
         float time, value;
-        while ( sample >> time >> value ) {
+        while ( (*sample) >> time >> value ) {
                 times.push_back ( time );
                 values.push_back ( value );
         }
@@ -88,6 +98,7 @@ int main ( int argc, char** argv ) {
         gr->SetLineStyle ( 1 );
         c->Update();
         c->SaveAs ( output.c_str() );
+        delete sample;
 
         return 0;
 }

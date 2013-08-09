@@ -32,6 +32,7 @@
 // standard C++ with new header file names and std:: namespace
 #include <iostream>
 #include <fstream>
+#include <string>
 #include <zlib.h>
 
 #ifdef GZSTREAM_NAMESPACE
@@ -92,6 +93,8 @@ public:
 class igzstream : public gzstreambase, public std::istream {
 public:
     igzstream() : std::istream( &buf) {} 
+    igzstream( const std::string& name, int open_mode = std::ios::in)
+        : gzstreambase( name.c_str(), open_mode), std::istream( &buf) {}
     igzstream( const char* name, int open_mode = std::ios::in)
         : gzstreambase( name, open_mode), std::istream( &buf) {}  
     gzstreambuf* rdbuf() { return gzstreambase::rdbuf(); }

@@ -49,18 +49,12 @@ public:
 
 
                 // now I should have all the information needed for the future
-                for ( int i = 0; i < info->NChannels; ++i ) {
+                for ( int i = 0; i < info->NChannels && i < 5; ++i ) {
                         get( info->theChannelInfo[i].DetType, info->theChannelInfo[i].DetID, out );
-                        getchar();
-
-                        //delete info;
-                        //theRunReader=new RunReader();
-                        /*theRunReader->SetDirName(path);
-            theRunReader->SetRunNumber(run);
-            theRunReader->SetSegmentNumber(0); // the first segment is enough for us
-            info = theRunReader->GetStructure();*/
                 }
         }
+
+
 
         ///
         /// \brief Read the data for a specific detector of the current run. After reading it runs the
@@ -83,37 +77,27 @@ public:
                 // Check number of events in the file
                 TotalNEvents=theRunReader->Init();
                 if(TotalNEvents<0) return;
-                //else cout<<"Total number of events in this file: "<<TotalNEvents<<endl;
+
+
                 theACQCInfo=theRunReader->GetACQCInfo();
 
                 // Determine number of signals in each event, loop over events and save all signals into a file
-                int first_channel, first_time, last_time;
-                float channelwidth;
-
-                //        FILE *fout;
+                double first_channel, first_time, last_time, channelwidth;
                 int totalcount = 0;
+
+
                 // Loop over events
                 for(theEventN=firstevent; theEventN<=TotalNEvents; theEventN++) {
+                        // just for diagnostic purposes
+                        string name = detector + std::to_string((long long int)id) + " event " + std::to_string((long long int)theEventN);
 
-
-                        //            if ( theEventN == 1 ) {
-                        //                char foutname[200];
-                        //                printf( "./%s%d_r%d_segm%d_ev%d.dat\n", detector.c_str(),id, theRunReader->RunN, theRunReader->SegmentN, theEventN);
-                        //                sprintf(foutname,"./%s%d_r%d_segm%d_ev%d.dat",detector.c_str(),id, theRunReader->RunN, theRunReader->SegmentN,theEventN);
-
-                        //                fout = fopen(foutname,"w+");
-                        //            }
                         //  Loop over signals
                         TotalNSignals=theRunReader->TakeEvent(theEventN);
-                        if(TotalNSignals<0)
-                                return;
-                        // else
-                        //printf("Reading and Writing into: %s\n", foutname);
+                        if(TotalNSignals<0) return;
+
                         for(theSignalN=1; theSignalN<=TotalNSignals; theSignalN++) {
 
-                                peakanalyzer<double> p( detector + std::to_string((long long int)id) + " event " + std::to_string((long long int)theEventN) );
-
-
+                                peakanalyzer<double> p( name );
 
                                 // printf("Reading/Writing: Run %d %s %d Event %d Signal %d\n",RunN,DetName.c_str(),DetID,theEventN,theSignalN);
                                 SignalInfo* theSignalInfo=theACQCInfo->theSignal[theSignalN-1];
@@ -123,17 +107,13 @@ public:
                                 last_time=(first_channel+theSignalInfo->PulseLength-0.5)*channelwidth;
 
 
-
-                                //if ( theEventN == 1 ) {
-                                printf( "%d %f %d %f\n", first_channel, channelwidth,theRunReader->GetSampleRate(), 1./theRunReader->GetSampleRate()*1000. );
                                 for(unsigned int i=0;i<theSignalInfo->PulseLength;i++) {
-                                        float time = (float)first_time+i*channelwidth;
-                                        float value = (float)theSignalInfo->data[i];
+                                        double time = (double)first_time+i*channelwidth;
+                                        double value = (double)theSignalInfo->data[i];
                                         p.push( time, value );
 
-                                        //fprintf(fout,"%f %f\n",(float)first_time+i*channelwidth,(float)theSignalInfo->data[i]);
+                                        //fprintf(fout,"%f %f\n",(double)first_time+i*channelwidth,(double)theSignalInfo->data[i]);
                                 }
-                                //}
 
                                 totalcount += p.peaks();
                         }
@@ -141,7 +121,8 @@ public:
 
 
                 string detectorname = detector + std::to_string((long long int)id);
-                // prints a pair <DETECTOR, value>
+
+                // prints a pair <DETECTOR, value> in the output file
                 out << "<" << detectorname << ", " << totalcount << ">\t";
                 out.flush();
 
@@ -149,15 +130,8 @@ public:
                 // push point to the gui
                 window->addPoint( detectorname, runstart - userstart, totalcount );
 
-
                 cout << "[fast] " << detector << id << " has " << totalcount << " peaks." << endl;
 
-
-                // after one detector has been read I start analyzing
-                //if ( __analyzer.joinable() ) __analyzer.join();
-
-                //peakanalyzer p( detector + std::to_string((long long int)id) );
-                //__analyzer = thread( &peakanalyzer::analyze, p, std::ref( __stream ), std::ref( __stream_mutex ) );
         }
 };
 
