@@ -132,7 +132,7 @@ public:
                         driver = get_driver_instance();
                         con = driver->connect(url, user, "");
 
-                        cerr << "[slow] Successfully connected to " << url << "." << endl;
+                        cout << "[slow] Successfully connected to " << url << "." << endl;
                         con->setSchema( "nTOFDAQ" );
                         for ( int i = 0; i < 3; ++i ) get( tables[i], queryformat );
 
@@ -156,32 +156,37 @@ public:
 
 
 
-                /*while( 1 ) {
-                        string first = "SILI1";
-                        string second = "SILI3";
-                        sleep( 4 );
+                while( 1 ) {
+                        sleep( 20 );
+
 
                         window->lock();
-                        TGraph* a = window->get( first );
-                        TGraph* b = window->get( second );
-                        if ( !a || !b || a->GetN() != b->GetN() || b->GetN() < 2 ) {
-                                window->unlock();
-                                cout << "[slow] nothing yet..." << endl;
-                                continue;
+                        for ( gui::map_type::iterator j = window->begin(); j != window->end(); ++j ) {
+                                gui::map_type::iterator firstj = j;
+
+                                for ( ++j; j != window->end(); ++j ) {
+                                        string first = firstj->first;
+                                        string second = j->first;
+
+                                        TGraph* a = window->get( first );
+                                        TGraph* b = window->get( second );
+                                        if ( !a || !b ) continue;
+
+                                        correlation correlator;
+                                        double ab = correlator( a->GetN(), a->GetX(), a->GetY(), b->GetN(), b->GetX(), b->GetY() );
+                                        double ba = correlator( b->GetN(), b->GetX(), b->GetY(), a->GetN(), a->GetX(), a->GetY() );
+
+                                        if ( ab * ba > 0.80 && ab * ba < 1.20 )
+                                                cout << "[slow] correlation between " << first << " and " << second << " is " << ab * ba << endl;
+
+                                }
+
+                                j = firstj;
                         }
 
-                        correlation correlator;
-                        double ab = correlator( a->GetN(), a->GetX(), a->GetY(), b->GetN(), b->GetX(), b->GetY() );
-                        double ba = correlator( b->GetN(), b->GetX(), b->GetY(), a->GetN(), a->GetX(), a->GetY() );
 
-                        ofstream plotte( "plotte.dat" );
-                        for ( int i = 0; i < a->GetN(); ++i ) plotte << a->GetY()[i] << " " << b->GetY()[i] << endl;
-                        plotte.close();
-
-
-                        cout << "[slow] correlation between " << first << " and " << second << " is " << ab * ba << endl;
                         window->unlock();
-                }*/
+                }
 
 
 

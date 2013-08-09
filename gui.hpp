@@ -45,9 +45,10 @@ class gui : public TGMainFrame {
 
 
 #ifndef __CINT__
+public:
         typedef map<string, TGraph*> map_type;
         typedef set<string> set_type;
-
+private:
 
         // the following datastructures has to be protected by a mutex
         // since they could be changed from other threads
@@ -139,6 +140,17 @@ public:
                 plot_mutex.unlock();
 #endif
         }
+
+
+#ifndef __CINT__
+        map_type::iterator begin() {
+                return plot.begin();
+        }
+
+        map_type::iterator end() {
+                return plot.end();
+        }
+#endif
 
         void draw() {
                 TCanvas *c = ec->GetCanvas();
