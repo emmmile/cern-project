@@ -20,7 +20,7 @@ class castor {
 
         time_t       runstart;
         time_t       userstart;
-        gui*         window;
+        correlator*         window;
 public:
         ///
         /// \brief Construct a \ref castor object, starting reading the data of the detectors.
@@ -31,7 +31,7 @@ public:
         /// \param s starting time, it is actually used only for viewing on the GUI.
         /// \param w pointer to the GUI window.
         ///
-        castor( const string& path, const int& run, fstream& out, time_t rs, time_t us, gui* w )
+        castor( const string& path, const int& run, fstream& out, time_t rs, time_t us, correlator* w )
                 : runstart( rs ), userstart( us ), window( w ) {
                 // open the file and get some informations, for example exact date and detectors numbers and names
                 theRunReader=new RunReader();
@@ -127,8 +127,9 @@ public:
                 out.flush();
 
 
-                // push point to the gui
+                window->lock();
                 window->addPoint( detectorname, runstart - userstart, totalcount );
+                window->unlock();
 
                 cout << "[fast] " << detector << id << " has " << totalcount << " peaks." << endl;
 

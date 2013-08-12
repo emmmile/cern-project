@@ -95,17 +95,21 @@ int main ( int argc, char** argv ) {
 
 
     TApplication app( "Viewer", &argc, argv );
-    gui* window = new gui( gClient->GetRoot(), start, end, 1440, 900 );
+    correlator dataholder;
+    gui* window = new gui( gClient->GetRoot(), start, end, 1440, 900, &dataholder );
 
-    fastreader freader( starttime, endtime, window );
-    slowreader sreader( starttime, endtime, window );
+
+    fastreader freader( starttime, endtime, &dataholder );
+    slowreader sreader( starttime, endtime, &dataholder );
 
     thread fthread( &fastreader::read, freader, std::ref( dbfile ) );
     thread sthread( &slowreader::read, sreader, std::ref( dburl ) );
+    thread cthread( &correlator::run,  &dataholder );
 
     app.Run();
     sthread.join();
     fthread.join();
+    //cthread.join();
 
     return 0;
 }

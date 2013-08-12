@@ -10,7 +10,6 @@
 #include "dateutils.hpp"
 #include "gui.hpp"
 
-#include <TGraph.h>
 #include "mysql_connection.h"
 
 #include <cppconn/driver.h>
@@ -33,7 +32,7 @@ class slowreader {
         string dateformat;
         string outdir;
 
-        gui* window;
+        correlator* window;
 
 
         sql::Driver *driver;
@@ -83,7 +82,9 @@ class slowreader {
                                         current_value = atof( res->getString( meta->getColumnLabel(i) ).c_str() );
                                         out << res->getString( meta->getColumnLabel(i) ) << "\t";
 
+                                        window->lock();
                                         window->addPoint( meta->getColumnLabel(i), current_time - start, current_value );
+                                        window->unlock();
                                 }
                         }
 
@@ -107,7 +108,7 @@ public:
         /// \param w a pointer to the gui window.
         /// \param out path of the output directory.
         ///
-        slowreader(  time_t s, time_t e, gui* w, const string& out = "./output/" )
+        slowreader(  time_t s, time_t e, correlator* w, const string& out = "./output/" )
                 : start( s ), end( e ), window( w ), outdir( out ) {
                 dateformat = "%Y-%m-%d %H:%M:%S";
         }
@@ -138,12 +139,12 @@ public:
 
                 } catch (sql::SQLException &e) {
                         /*
-              MySQL Connector/C++ throws three different exceptions:
+                        MySQL Connector/C++ throws three different exceptions:
 
-              - sql::MethodNotImplementedException (derived from sql::SQLException)
-              - sql::InvalidArgumentException (derived from sql::SQLException)
-              - sql::SQLException (derived from std::runtime_error)
-            */
+                        - sql::MethodNotImplementedException (derived from sql::SQLException)
+                        - sql::InvalidArgumentException (derived from sql::SQLException)
+                        - sql::SQLException (derived from std::runtime_error)
+                        */
                         cerr << "# ERR: SQLException in " << __FILE__;
                         cerr << "(" << __FUNCTION__ << ") on line " << __LINE__ << endl;
                         /* what() (derived from std::runtime_error) fetches error message */
@@ -152,43 +153,6 @@ public:
                         cerr << ", SQLState: " << e.getSQLState() << " )" << endl;
                         con = NULL;
                 }
-
-
-
-
-                while( 1 ) {
-                        sleep( 20 );
-
-
-                        window->lock();
-                        for ( gui::map_type::iterator j = window->begin(); j != window->end(); ++j ) {
-                                gui::map_type::iterator firstj = j;
-
-                                for ( ++j; j != window->end(); ++j ) {
-                                        string first = firstj->first;
-                                        string second = j->first;
-
-                                        TGraph* a = window->get( first );
-                                        TGraph* b = window->get( second );
-                                        if ( !a || !b ) continue;
-
-                                        correlation correlator;
-                                        double ab = correlator( a->GetN(), a->GetX(), a->GetY(), b->GetN(), b->GetX(), b->GetY() );
-                                        double ba = correlator( b->GetN(), b->GetX(), b->GetY(), a->GetN(), a->GetX(), a->GetY() );
-
-                                        if ( ab * ba > 0.80 && ab * ba < 1.20 )
-                                                cout << "[slow] correlation between " << first << " and " << second << " is " << ab * ba << endl;
-
-                                }
-
-                                j = firstj;
-                        }
-
-
-                        window->unlock();
-                }
-
-
 
 
                 cerr << "[slow] Done." << endl;

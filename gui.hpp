@@ -12,7 +12,9 @@
 #include <TCanvas.h>
 #include <TTimer.h>
 #include <TFile.h>
+#include <TList.h>
 #include <TApplication.h>
+#include <TGListBox.h>
 #include <TGButtonGroup.h>
 #include <unistd.h>
 #include <iostream>
@@ -21,15 +23,9 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include "correlation.hpp"
 
-// every C++11 object must be enclosed for safety reasons into this guard
-// http://root.cern.ch/phpBB3/viewtopic.php?f=5&t=15858
-// otherwise rootcint fails, at least for what concerns ROOT 5
-#ifndef __CINT__
-#include <mutex>
-#include <map>
-#include <set>
-#endif
+
 using namespace std;
 
 
@@ -38,56 +34,52 @@ using namespace std;
 ///
 class gui : public TGMainFrame {
         TRootEmbeddedCanvas *ec;
-        TGButtonGroup *bg;
+        //TGButtonGroup *bg;
+        TGListBox *listbox;
         TTimer *t;
         int x; ///< the number of columns.
         int y; ///< the number of rows.
 
-
-#ifndef __CINT__
+        correlator* data;
 public:
-        typedef map<string, TGraph*> map_type;
-        typedef set<string> set_type;
-private:
-
-        // the following datastructures has to be protected by a mutex
-        // since they could be changed from other threads
-        mutex plot_mutex;
-        vector<TGCheckButton*> checkboxes;
-
-        set_type choosen;
-        map_type plot;
-#endif
-public:
-        gui( const TGWindow *p, const string& start, const string& end, int w, int h ) : TGMainFrame( p, w, h ) {
+        gui( const TGWindow *p, const string& start, const string& end, int w, int h, correlator* holder )
+                : TGMainFrame( p, w, h ), data( holder ) {
                 x = 3;
                 y = 3;
                 //frame = new TGMainFrame( p, w, h );
+                int lateralFrameWidth = 200;
 
                 t = new TTimer();
                 TGHorizontalFrame* hframe = new TGHorizontalFrame(this, w, h);
 
-                ec = new TRootEmbeddedCanvas( "ec", hframe, w-300, h );
+                ec = new TRootEmbeddedCanvas( "ec", hframe, w - lateralFrameWidth, h );
                 ec->GetCanvas()->Divide( x, y );
 
-                TGVerticalFrame* vframe = new TGVerticalFrame(hframe, 300, h);
+                // creates and add the buttons
+                TGVerticalFrame* vframe = new TGVerticalFrame(hframe, lateralFrameWidth, h);
                 TGCheckButton *automatic = new TGCheckButton(vframe, "&Automatic refresh" );
                 TGTextButton *draw = new TGTextButton(vframe,"&Refresh" );
                 TGTextButton *exit = new TGTextButton(vframe,"&Exit", "gApplication->Terminate(0)");
-                bg = new TGButtonGroup(vframe,"Choose plots");
-
                 vframe->AddFrame( automatic, new TGLayoutHints(kLHintsCenterX | kLHintsExpandX, 6,6,6,6 ) );
                 vframe->AddFrame( draw, new TGLayoutHints(kLHintsCenterX | kLHintsExpandX, 6,6,6,6 ) );
                 vframe->AddFrame( exit, new TGLayoutHints(kLHintsCenterX | kLHintsExpandX, 6,6,6,6 ) );
-                vframe->AddFrame( bg, new TGLayoutHints( kLHintsCenterX | kLHintsExpandX, 6,6,6,6 ) );
+                //vframe->AddFrame( bg, new TGLayoutHints( kLHintsCenterX | kLHintsExpandX, 6,6,6,6 ) );
 
+                // creates and add the list box
+                listbox = new TGListBox(vframe);
+                listbox->SetMultipleSelections();
+                //int usedSpace = automatic->GetHeight() + draw->GetHeight() + exit->GetHeight();
+                listbox->Resize(vframe->GetWidth(), vframe->GetHeight() );
+                vframe->AddFrame(listbox,new TGLayoutHints(kLHintsTop | kLHintsExpandY | kLHintsLeft,6,6,6,6));
+
+                // finally add the two layouts (one for the plots, one for the buttons and stuff) to the main widget
                 hframe->AddFrame( ec, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 6,6,6,6 ));
                 hframe->AddFrame( vframe, new TGLayoutHints( kLHintsExpandY, 6,6,6,6 ) );
                 this->AddFrame( hframe, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY ) );
 
 
                 // Set a name to the main frame
-                string title = "Plot view from " + start + " to " + end;
+                string title = "View from " + start + " to " + end;
                 this->SetWindowName( title.c_str() );
 
                 // Map all subwindows of main frame
@@ -100,13 +92,11 @@ public:
                 this->MapWindow();
 
 
-
-
                 // Connections
                 t->Connect("Timeout()", "gui", this, "refresh()");
                 this->Connect("CloseWindow()", "gui", this, "exit()" );
                 draw->Connect("Clicked()","gui",this,"refresh()");
-                bg->Connect("Clicked(Int_t)", "gui", this, "handleCheck(Int_t)" );
+                listbox->Connect("Selected(Int_t)", "gui", this, "handleSelection(Int_t)" );
                 automatic->Connect("Toggled(Bool_t", "gui", this, "handleAutomaticRefresh(Bool_t)" );
 
         }
@@ -125,66 +115,72 @@ public:
         }
 
         void refresh( ) {
-                //cout << "[gui] Refreshing plots..." << endl;
+                cout << "[gui] Refreshing..." << endl;
                 draw();
         }
 
-        void lock ( ) {
-#ifndef __CINT__
-                plot_mutex.lock();
-#endif
-        }
+        void handleSelection ( Int_t v ) {
+                data->lock();
+                //cout << "[gui] selected entry " << data->name(v) << endl;
+                TList selected;
 
-        void unlock( ) {
-#ifndef __CINT__
-                plot_mutex.unlock();
-#endif
-        }
+                listbox->GetSelectedEntries( &selected );
+                int selectedentries = selected.GetSize();
 
+                // I don't want more than x * y entries selected
+                if ( selectedentries == x * y + 1 )
+                        listbox->GetEntry( v )->Activate( false );
 
-#ifndef __CINT__
-        map_type::iterator begin() {
-                return plot.begin();
+                data->unlock();
         }
-
-        map_type::iterator end() {
-                return plot.end();
-        }
-#endif
 
         void draw() {
                 TCanvas *c = ec->GetCanvas();
 
+                // updates the list box
+                data->lock();
 
-#ifndef __CINT__
-                plot_mutex.lock();
+                for ( int i = 0; i < data->plotsnumber(); ++i ) {
+                        string name = data->name( i );
+                        // if an entry is already present, just skip it
+                        // in this way the display order is the same of the one present in data
+                        if ( listbox->FindEntry( name.c_str() ) != NULL ) continue;
+                        listbox->AddEntry( name.c_str(), i );
+                        listbox->Layout();
+                }
 
-                int j = 0;
-                for ( set_type::iterator i = choosen.begin(); i != choosen.end(); ++i, ++j ) {
-                        //cout << "[gui] " << *i << " is about to be drawn " << plot.count(*i) << "\n";
 
 
-                        TGraph* current = plot.at(*i);
-                        current->SetMarkerStyle(1);
-                        current->SetMarkerColor(j+1);
-                        current->SetLineColor(j+1);
-                        c->cd(j + 1);
+                // draw the plots starting from the first canvas
+                TList selected;
+                listbox->GetSelectedEntries( &selected );
+
+                int j = 1;
+                TGLBEntry* entry;
+                TIterator* i = selected.MakeIterator();
+                while( entry = (TGLBEntry*) i->Next() ) {
+                        int index = entry->EntryId();
+                        TGraph* current = data->plot( index );
+
+                        //current->SetMarkerStyle(1);
+                        current->SetMarkerColor(j);
+                        current->SetLineColor(j);
+                        c->cd(j);
                         c->SetGridx();
                         c->SetGridy();
 
-                        current->Draw("ALP");
+                        current->Draw("AL");
+                        ++j;
                 }
 
-                for ( j; j < x * y; ++j ) {
-                        c->cd(j + 1)->Clear();
-                }
+                data->unlock();
+
+
+                // clear the remaining spaces
+                for ( j; j <= x * y; ++j ) c->cd(j)->Clear();
 
 
                 c->Update();
-
-
-                plot_mutex.unlock();
-#endif
         }
 
         void handleAutomaticRefresh( Bool_t on ) {
@@ -192,74 +188,6 @@ public:
 
                 if ( on ) t->Start(2000);
                 else      t->Stop();
-        }
-
-        void handleCheck ( Int_t v ) {
-                //cout << "[gui] something clicked: " << v << endl;
-
-
-                // since the checkboxes are dynamically created I can't create Signal/Slot connections
-                // that has to be known at compile time. What I do is to handle the event at a higher level
-                // that is at the button group level.
-
-                // I basically see which are the checked boxes and if their number is less than the available
-                // plots everything OK, they will be drawn.
-                // Otherwise the checked box that exceed that number (that will be the last checked box) is
-                // forced to be OFF.
-#ifndef __CINT__
-                set_type checked;
-
-                plot_mutex.lock();
-                for ( int i = 0; i < checkboxes.size(); ++i ) {
-                        if ( checkboxes[i]->IsDown() ) checked.insert( checkboxes[i]->GetString().Data() );
-                        //cout << checkboxes[i]->GetString() << " checked." << endl;
-                }
-
-
-                if ( checked.size() <= x * y ) {
-                        choosen = checked;
-                        //cout << "[gui] " << choosen.size() << " plots will be drawn.\n";
-                } else {
-                        for ( int i = 0; i < checkboxes.size(); ++i ) {
-                                // if the box is checked but is not in the choosen set (== it wasn't checked before)
-                                // I disable it
-                                if ( checkboxes[i]->IsDown() && choosen.count(checkboxes[i]->GetString().Data()) == 0 )
-                                        checkboxes[i]->SetState(kButtonUp);
-                        }
-                }
-
-                plot_mutex.unlock();
-#endif
-        }
-
-
-        void addPoint( const string& name, float t, float y ) {
-#ifndef __CINT__
-                plot_mutex.lock();
-                if ( plot.count( name ) == 0 ) {
-                        TGraph* newone = new TGraph();
-                        newone->SetTitle( name.c_str() );
-
-                        plot.insert( map_type::value_type( name, newone ) );
-
-                        // since a new plot has been added, update the checkbox area
-                        checkboxes.push_back( new TGCheckButton(bg, name.c_str(), 1 ) );
-                        bg->Show();
-                }
-
-                // add a point to the plot
-                int n = plot[name]->GetN();
-                //cout << "Adding " << name << " " << n << " " << t << " " << y << endl;
-                plot[name]->SetPoint( n, t, y );
-
-
-                plot_mutex.unlock();
-#endif
-        }
-
-        TGraph* get (const string& name ) {
-                if ( plot.count( name ) == 0 ) return NULL;
-                else return plot[name];
         }
 
         ClassDef(gui,0);

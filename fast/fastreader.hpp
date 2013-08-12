@@ -18,12 +18,12 @@ using namespace std;
 class fastreader {
     time_t start;
     time_t end;
-    gui* window;
+    correlator* window;
     string outdir;
 
 
 public:
-    fastreader( time_t s, time_t e, gui* w, const string& o = "./output/" )
+    fastreader( time_t s, time_t e, correlator* w, const string& o = "./output/" )
         : start( s ), end( e ), window( w ), outdir( o ) {
     }
 
