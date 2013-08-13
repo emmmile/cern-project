@@ -30,10 +30,8 @@ class slowreader {
         time_t start;
         time_t end;
         string dateformat;
-        string outdir;
 
         correlator* data;
-
 
         sql::Driver *driver;
         sql::Connection *con;
@@ -48,7 +46,6 @@ class slowreader {
         ///
         void get ( const string& table, const string& queryformat ) {
 
-
                 char query[512];
                 string startdate = tostr( start, dateformat );
                 string enddate = tostr( end, dateformat );
@@ -57,40 +54,33 @@ class slowreader {
 
 
                 sprintf(query, queryformat.c_str(), "*", table.c_str(), "PollDate", startdate.c_str(), "PollDate", enddate.c_str() );
-                res = stm->executeQuery( query );
+                res = stm->executeQuery( query ); // get the data
 
-                fstream out ( outdir + table + ".dat", std::fstream::out );
-
-                out << "#";
-                // prints an header
-                // start from 2 because the first column is always the ID
                 sql::ResultSetMetaData* meta = res->getMetaData();
-                for ( int i = 2; i <= meta->getColumnCount(); ++i )
-                        out << meta->getColumnLabel(i) << "\t";
-                out << endl;
 
-                // prints the data rows
                 while (res->next()) {
                         time_t current_time;
-                        float  current_value;
+                        double current_value;
 
+                        // since the data now is already received I lock here the mutex because the computation will be
+                        // really quick (I think is better than locking every time I add a single value)
+                        data->lock();
+
+                        // I start from 2 because the first column is always the ID of the record (not very interesting)
                         for ( int i = 2; i <= meta->getColumnCount(); ++i ) {
+                                // I do not make any check but the date has to be parsed BEFORE any other valye
+                                // (check the structure of the tables in the mysql database)
                                 if ( meta->getColumnLabel(i) == "PollDate" ) {
                                         current_time = totime( res->getString( meta->getColumnLabel(i) ), dateformat );
-                                        out << current_time << "\t";
                                 } else {
                                         current_value = atof( res->getString( meta->getColumnLabel(i) ).c_str() );
-                                        out << res->getString( meta->getColumnLabel(i) ) << "\t";
 
-                                        data->lock();
+                                        // send the value to the correlator
                                         data->addPoint( meta->getColumnLabel(i), current_time - start, current_value );
-                                        data->unlock();
                                 }
                         }
-
-                        out << endl;
+                        data->unlock();
                 }
-                out << endl;
 
                 delete stm;
                 delete res;
@@ -106,10 +96,9 @@ public:
         /// \param s starting time.
         /// \param e ending time.
         /// \param d a pointer to the correlator.
-        /// \param out path of the output directory.
         ///
-        slowreader(  time_t s, time_t e, correlator* d, const string& out = "./output/" )
-                : start( s ), end( e ), data( d ), outdir( out ) {
+        slowreader(  time_t s, time_t e, correlator* d )
+                : start( s ), end( e ), data( d ) {
                 dateformat = "%Y-%m-%d %H:%M:%S";
         }
 
@@ -121,14 +110,13 @@ public:
         /// password.
         ///
         void read ( const string& url ) {
-
+                // since the query structure is the same for all the tables, here it is
                 string queryformat = "SELECT %s FROM %s WHERE %s >= \"%s\" AND %s <= \"%s\"";
 
                 string user = "ntof";   // the user of the mysql database
                 string tables[3] = { "Protons", "Cooling", "Radiation" }; // the tables to take
 
                 try {
-                        mkdir( outdir.c_str(), 0777 );
                         /* Create a connection */
                         driver = get_driver_instance();
                         con = driver->connect(url, user, "");
@@ -155,7 +143,7 @@ public:
                 }
 
 
-                cerr << "[slow] Done." << endl;
+                cout << "[slow] Done." << endl;
         }
 };
 

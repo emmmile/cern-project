@@ -5,7 +5,7 @@
 #include <vector>
 #include <iterator>
 #include <iomanip>      // std::setprecision
-#include "window.hpp"
+#include "peakwindow.hpp"
 #include "peakanalyzer.hpp"
 #include <boost/program_options.hpp>
 #include "gzstream/gzstream.h"
@@ -26,7 +26,7 @@ int main( int argc, char** argv ) {
                 ("help,h", "produce this help message")
                 ("input-data,i", value<string>(&input), "set the input data file, normally a .dat file corresponding to a single move, not to a full event")
                 ("compressed,c", "use compressed input (default is uncompressed)")
-                ;
+        ;
 
         variables_map vm;
 

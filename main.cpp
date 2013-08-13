@@ -27,13 +27,13 @@ int main ( int argc, char** argv ) {
         // Declare the supported program options
         options_description desc("Allowed options");
         desc.add_options()
-                        ("help,h", "produce this help message")
-                        ("format,f", value<string>(&format), formatstring.c_str())
-                        ("start,s", value<string>(&start), "set the starting date, according to the specified format with -f")
-                        ("end,e", value<string>(&end), "set the ending date, according to the specified format with -f")
-                        ("localdb,l", value<string>(&localdb), localdbstring.c_str())
-                        ("db,d",value<string>(&dburl), dbstring.c_str())
-                        ;
+                ("help,h", "produce this help message")
+                ("format,f", value<string>(&format), formatstring.c_str())
+                ("start,s", value<string>(&start), "set the starting date, according to the specified format with -f")
+                ("end,e", value<string>(&end), "set the ending date, according to the specified format with -f")
+                ("localdb,l", value<string>(&localdb), localdbstring.c_str())
+                ("db,d",value<string>(&dburl), dbstring.c_str())
+        ;
 
         variables_map vm;
 
@@ -83,7 +83,7 @@ int main ( int argc, char** argv ) {
         }
 
 
-        fstream dbfile( localdb );
+        ifstream dbfile( localdb );
         if ( !dbfile ) {
                 cerr << "local database file \"" << localdb << "\" not found.\n";
                 exit( 1 );

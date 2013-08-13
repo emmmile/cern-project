@@ -8,9 +8,9 @@
 #include "TF1.h"
 #include <TGraph.h>
 
-// every C++11 object must be enclosed for safety reasons into this guard
-// http://root.cern.ch/phpBB3/viewtopic.php?f=5&t=15858
+// every C++11 object must be enclosed for safety reasons into this #ifndef __CINT__
 // otherwise rootcint fails, at least for what concerns ROOT 5
+// http://root.cern.ch/phpBB3/viewtopic.php?f=5&t=15858
 #include <mutex>
 #include <map>
 #include <set>
@@ -32,11 +32,11 @@ class correlator {
         bimaptype       __detectors;      // stores the association name <-> index
         vector<TGraph*> __data;           // stores the real data
 
+        // I'm using TGraph because otherwise I would have to keep two vectors for each detector (time and value)
+        // and then duplicate the memory creating a TGraph for viewing purposes. In fact there is no constructor in
+        // TGraph where the data is actually SHARED, see http://root.cern.ch/root/html/TGraph.html
 
 public:
-        correlator() {
-        }
-
         void lock ( ) {
                 __datamutex.lock();
         }
@@ -187,41 +187,31 @@ public:
 
                                         TGraph* a = __data[j];
                                         TGraph* b = __data[i];
-                                        //string first  = name( j );
-                                        //string second = name( i );
-                                        //if ( !a || !b ) continue;
 
                                         double ab = c( a->GetN(), a->GetX(), a->GetY(), b->GetN(), b->GetX(), b->GetY() );
                                         double ba = c( b->GetN(), b->GetX(), b->GetY(), a->GetN(), a->GetX(), a->GetY() );
 
                                         C[j * size + i] = ab * ba;
-                                        //if ( ab * ba > 0.80 && ab * ba < 1.20 ) {
-                                        //        cout.precision( 10 );
-                                        //        cout << "[correlator] correlation between " << first << " and " << second << " is " << ab * ba << endl;
-                                        //}
                                 }
                         }
 
                         // sorting pass, to print say the most 20 correlated pairs
-                        double* sortedC[size * size];
-                        for ( int i = 0; i < size * size; ++i )
-                                sortedC[i] = C + i;
+                        double* viewOnC[size * size];
+                        for ( int i = 0; i < size * size; ++i ) viewOnC[i] = C + i;
 
-                        sort( sortedC, sortedC + size * size, sorter(size, C) );
+                        sort( viewOnC, viewOnC + size * size, sorter(size, C) );
 
                         cout.precision( 10 );
                         for ( int i = 0; i < 20; ++i ) {
-                                int j = sortedC[i] - C; // distance from the base of the array
+                                int j = viewOnC[i] - C; // distance from the base of the array
 
                                 int first = j / size;   // go back to the indexes
                                 int second = j % size;
-                                if ( *sortedC[i] == numeric_limits<double>::max() ) break;
+                                if ( *viewOnC[i] == numeric_limits<double>::max() ) break;
 
-                                cout << "[correlator] correlation between " << name(first) << " and " << name(second) << " is " << *sortedC[i] << endl;
+                                cout << "[correlator] correlation between " << name(first) << " and " << name(second) << " is " << *viewOnC[i] << endl;
                         }
                         unlock();
-
-
 
                         cout << "[correlator] "; // will print the elapsed time if a progress_timer is used
                 }

@@ -29,11 +29,11 @@ int main ( int argc, char** argv ) {
         // Declare the supported program options
         options_description desc("Allowed options");
         desc.add_options()
-                        ("help,h", "produce this help message")
-                        ("input-data,i", value<string>(&input), "set the input data file, normally a .dat")
-                        ("output-image,o", value<string>(&output), "set the output location, default to ./histogram.png")
-                        ("compressed,c", "use compressed input (default is uncompressed)")
-                        ;
+                ("help,h", "produce this help message")
+                ("input-data,i", value<string>(&input), "set the input data file, normally a .dat")
+                ("output-image,o", value<string>(&output), "set the output location, default to ./histogram.png")
+                ("compressed,c", "use compressed input (default is uncompressed)")
+        ;
 
         variables_map vm;
 
@@ -75,9 +75,9 @@ int main ( int argc, char** argv ) {
         c->SetGridx();
         c->SetGridy();
 
-        vector<float> times;
-        vector<float> values;
-        float time, value;
+        vector<double> times;
+        vector<double> values;
+        double time, value;
         while ( (*sample) >> time >> value ) {
                 times.push_back ( time );
                 values.push_back ( value );

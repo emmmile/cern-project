@@ -27,12 +27,11 @@ public:
         ///
         /// \param path the location of the experiment directory on CASTOR.
         /// \param run the run number.
-        /// \param out a stream where to write the (analyzed) data.
         /// \param rs the run start time.
         /// \param us the start time specified by the user.
         /// \param d pointer to the correlator, where the final data is stored.
         ///
-        castor( const string& path, const int& run, fstream& out, time_t rs, time_t us, correlator* d )
+        castor( const string& path, const int& run, const time_t rs, const time_t us, correlator* d )
                 : runstart( rs ), userstart( us ), data( d ) {
 
                 // open the file and get some informations, for example exact date and detectors numbers and names
@@ -46,7 +45,7 @@ public:
 
                 // finally reads the data, one detector after the other
                 for ( int i = 0; i < info->NChannels; ++i ) {
-                        readDetector( info->theChannelInfo[i].DetType, info->theChannelInfo[i].DetID, out );
+                        readDetector( info->theChannelInfo[i].DetType, info->theChannelInfo[i].DetID );
                 }
         }
 
@@ -58,7 +57,7 @@ public:
         /// \param id the detector id.
         /// \param out a stream where to write the (analyzed) data.
         ///
-        void readDetector( const string& detector, const int& id, fstream& out ) {
+        void readDetector( const string& detector, const int& id ) {
                 cout << "[fast] Reading " << detector << id << "..." << endl;
 
                 theRunReader->SetDetName(detector);
@@ -112,12 +111,7 @@ public:
                         }
                 }
 
-
                 string detectorname = detector + std::to_string((long long int)id);
-
-                // prints a pair <DETECTOR, value> in the output file
-                out << "<" << detectorname << ", " << totalcount << ">\t";
-                out.flush();
 
                 // send a value to the correlator (consequently also the GUI)
                 data->lock();

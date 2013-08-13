@@ -143,10 +143,10 @@ public:
                 for ( int i = 0; i < data->plotsnumber(); ++i ) {
                         string name = data->name( i );
                         // if an entry is already present, just skip it
-                        // in this way the display order is the same of the one present in data
+                        // in this way the display order is the same of the one present in the correlator
                         if ( listbox->FindEntry( name.c_str() ) != NULL ) continue;
                         listbox->AddEntry( name.c_str(), i );
-                        listbox->Layout();
+                        listbox->Layout(); // refresh the listbox
                 }
 
 
@@ -157,6 +157,7 @@ public:
 
                 int j = 1;
                 TGLBEntry* entry;
+                // loop over the selected entries
                 TIterator* i = selected.MakeIterator();
                 while( entry = (TGLBEntry*) i->Next() ) {
                         int index = entry->EntryId();

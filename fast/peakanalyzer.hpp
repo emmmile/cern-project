@@ -1,19 +1,20 @@
-#ifndef ANALYZER_HPP
-#define ANALYZER_HPP
+#ifndef PEAKANALYZER_HPP
+#define PEAKANALYZER_HPP
 
 #include <iostream>
 #include <sys/stat.h>
 #include <mutex>
-#include "window.hpp"
+#include "peakwindow.hpp"
 using namespace std;
 
 enum status { START, BASELINE, PEAKRECORDING, GAMMAFLASH };
 
 ///
 /// \brief The peakanalyzer class searches for peaks in the raw data coming from a detector move,
-/// inside an event of a run.
+/// inside an event of a run. It tries to be as general as possible, adapting to various detector types.
+/// It also understand if the detector will have negative or positive peaks.
 ///
-template<class F>
+template<class F> // if you want to easily switch between double and float
 class peakanalyzer {
         F               beta;
         F               alpha;
@@ -22,6 +23,9 @@ class peakanalyzer {
         F               baseline;
         F               vthreshold;
 
+        F               oldtime;
+        F               oldvalue;
+
         peakwindow<F>   last;
         status          detector_status;
         type            detector_type;
@@ -29,11 +33,10 @@ class peakanalyzer {
 
         int peaksnumber;
         int typecounter;
-        static const int typethreshold = 127.0;
-
-        F oldtime, oldvalue;
+        static const int typethreshold = 128;
 public:
-        peakanalyzer( const string& n ) : name( n ), peaksnumber( 0 ), typecounter( 0 )  {
+        peakanalyzer( const string& n )
+                : name( n ), peaksnumber( 0 ), typecounter( 0 ) {
                 // for computing the average derivative of the last samples
                 beta = 1.0 / 4.0;
                 dv = 0.0; // the derivative of the value. EWMA
@@ -55,6 +58,12 @@ public:
                 //cout << "#time value baseline vthreshold dv dvthreshold " << endl;
         }
 
+        ///
+        /// \return the number of peaks found.
+        ///
+        int peaks ( ) const {
+                return peaksnumber;
+        }
 
         void updatewindow ( ) {
                 for ( unsigned int j = 0; j < last.size(); j++ ) {
@@ -67,7 +76,6 @@ public:
 
 
         void update ( const F& time, const F& value ) {
-
 
                 F dt = ( time - oldtime );
                 F currentdv = ( value - oldvalue ) / dt;
@@ -84,10 +92,9 @@ public:
         /// \brief Analyze a single additional pair \ref time, \ref value.
         ///
         void push( const F& time, const F& value ) {
-
-                //cout << std::this_thread::get_id() << " " << time << " " << value << endl;
+                // just the first time run the following code
                 if ( detector_status == START ) {
-                        baseline = value; // just the first time
+                        baseline = value;
                         oldtime = time;
                         oldvalue = value;
                         detector_status = BASELINE;
@@ -108,7 +115,7 @@ public:
                         dvthreshold = beta * fabs ( dv - currentdv ) + ( 1.0 - beta ) * dvthreshold; // update the standard deviation for the derivative
                         vthreshold = alpha * fabs ( value - baseline ) + ( 1.0 - alpha ) * vthreshold; // update the standard deviation for the values
 
-
+                        // if I've not read enough samples to understand the detector type, then quit immediately
                         if ( typecounter < typethreshold )
                                 break;
                         else if ( detector_type == UNSET ) {
@@ -118,7 +125,7 @@ public:
                                 //cout << name << " is a " << (detector_type == POSITIVE ? "positive" : "negative") << " detector." << endl;
                         }
 
-                        // if derivative is big change state, a possible peak is happening
+                        // if derivative is big then change state, because a possible peak is happening
                         if ( ( dv < -dvthreshold && detector_type == NEGATIVE ) ||
                              ( dv >  dvthreshold && detector_type == POSITIVE ) ) {
                                 detector_status = PEAKRECORDING;
@@ -153,36 +160,7 @@ public:
                 //cout << time << " " << value << " " << baseline << " " << vthreshold << " " << dv << " " << dvthreshold << endl;
         }
 
-
-        ///
-        /// \return the number of peaks found.
-        ///
-        int peaks ( ) const {
-                return peaksnumber;
-        }
-
-
-        void analyze ( iostream& s ) { //, mutex& m ) {
-                //m.lock();
-                cout << "[fast] Started analyzing " << name << "..." << endl;
-
-                // start the reading loop, I think could be easily tuned for online behaviour
-                F time, value;
-                while ( s >> time >> value ) {
-                        push(time, value );
-                }
-
-                //        cout << "Last baseline was " << baseline << endl;
-                //        cout << "Last dvthreshold was " << dvthreshold << endl;
-                //        cout << "Last vthreshold was " << vthreshold << endl;
-
-                cout << "[fast] Done with " << name << "" << endl;
-                //m.unlock();
-        }
-
-
-
-        friend ostream& operator << ( ostream& out, const peakanalyzer& p ) {
+        friend ostream& operator<< ( ostream& out, const peakanalyzer& p ) {
                 out << "Current baseline is " << p.baseline << endl;
                 out << "Current dvthreshold is " << p.dvthreshold << endl;
                 out << "Current vthreshold is " << p.vthreshold << endl;
@@ -191,4 +169,4 @@ public:
         }
 };
 
-#endif // ANALYZER_HPP
+#endif // PEAKANALYZER_HPP

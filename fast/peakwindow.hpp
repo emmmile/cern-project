@@ -1,5 +1,5 @@
-#ifndef WINDOW_HPP
-#define WINDOW_HPP
+#ifndef PEAKWINDOW_HPP
+#define PEAKWINDOW_HPP
 #include <vector>
 #include <numeric>
 #include <iostream>
@@ -17,37 +17,37 @@ enum type { POSITIVE, NEGATIVE, UNSET };
 ///
 template<class F>
 class peakwindow {
-        vector<F> __times;
-        vector<F> __values;
+        vector<F> times;
+        vector<F> values;
 
 public:
         ///
         /// Adds a triple to the window
         ///
         void push ( const F& time, const F& value ) {
-                __times.push_back ( time );
-                __values.push_back ( value );
+                times.push_back ( time );
+                values.push_back ( value );
         }
 
 
         const F& time ( int index ) const {
-                return __times[index];
+                return times[index];
         }
 
         const F& value ( int index ) const {
-                return __values[index];
+                return values[index];
         }
 
         ///
         /// Clears the window.
         ///
         void clear ( ) {
-                __times.clear();
-                __values.clear();
+                times.clear();
+                values.clear();
         }
 
         uint size ( ) const {
-                return __times.size();
+                return times.size();
         }
 
 
@@ -56,8 +56,8 @@ public:
         ///
         F integral ( F baseline ) const {
                 F out = 0.0;
-                for ( uint i = 1; i < __times.size(); ++i ) {
-                        out += fabs( baseline - __values[i] ) * ( __times[i] - __times[i - 1] );
+                for ( uint i = 1; i < times.size(); ++i ) {
+                        out += fabs( baseline - values[i] ) * ( times[i] - times[i - 1] );
                 }
 
                 return out;
@@ -69,7 +69,7 @@ public:
         /// maximum peak (computed with \ref minimum).
         ///
         F minimum_integral( const F& baseline ) const {
-                return ( __times.back() - __times.front() ) * fabs( baseline - minimum() ) * 0.25;
+                return ( times.back() - times.front() ) * fabs( baseline - minimum() ) * 0.25;
         }
 
         bool good ( const F& baseline, const F& vthreshold, type detector ) {
@@ -84,26 +84,26 @@ public:
         /// \return the minumum value in the window.
         ///
         const F& minimum ( ) const {
-                return *min_element ( __values.begin(), __values.end() );
+                return *min_element ( values.begin(), values.end() );
         }
 
         ///
         /// \return the maximum value in the window.
         ///
         const F& maximum ( ) const {
-                return *max_element( __values.begin(), __values.end() );
+                return *max_element( values.begin(), values.end() );
         }
 
         ///
         /// \return the time instant correspondent to the minimum value.
         ///
         F minimum_time ( ) const {
-                return __times[min_element ( __values.begin(), __values.end() ) - __values.begin()];
+                return times[min_element ( values.begin(), values.end() ) - values.begin()];
         }
 
         friend ostream& operator << ( ostream& out, const peakwindow& w ) {
-                for ( uint i = 0; i < w.__times.size(); ++i )
-                        out << w.__times[i] << " " << w.__values[i] << endl;
+                for ( uint i = 0; i < w.times.size(); ++i )
+                        out << w.times[i] << " " << w.values[i] << endl;
 
                 //out << "Total integral is " << w.integral() << endl;
                 out << "Minimum is " << w.minimum() << endl;
@@ -111,4 +111,4 @@ public:
         }
 };
 
-#endif // WINDOW_HPP
+#endif // PEAKWINDOW_HPP

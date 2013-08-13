@@ -34,7 +34,7 @@ OTHER_FILES += \
     createdb.py
 
 HEADERS += \
-    fast/window.hpp \
+    fast/peakwindow.hpp \
     fast/reader/RawReader.hh \
     fast/fastreader.hpp \
     fast/peakanalyzer.hpp \
