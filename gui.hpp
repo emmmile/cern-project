@@ -33,19 +33,16 @@ using namespace std;
 /// \brief The gui class implements the main window GUI.
 ///
 class gui : public TGMainFrame {
-        TRootEmbeddedCanvas *ec;
-        //TGButtonGroup *bg;
-        TGListBox *listbox;
-        TTimer *t;
-        int x; ///< the number of columns.
-        int y; ///< the number of rows.
+        TRootEmbeddedCanvas*    ec;
+        TGListBox*              listbox;
+        TTimer*                 t;
+        int                     x;                  ///< the number of columns.
+        int                     y;                  ///< the number of rows.
 
-        correlator* data;
+        correlator*             data;
 public:
         gui( const TGWindow *p, const string& start, const string& end, int w, int h, correlator* holder )
-                : TGMainFrame( p, w, h ), data( holder ) {
-                x = 3;
-                y = 3;
+                : TGMainFrame( p, w, h ), x( 3 ), y( 3 ), data( holder ) {
                 //frame = new TGMainFrame( p, w, h );
                 int lateralFrameWidth = 200;
 
@@ -99,6 +96,9 @@ public:
                 listbox->Connect("Selected(Int_t)", "gui", this, "handleSelection(Int_t)" );
                 automatic->Connect("Toggled(Bool_t", "gui", this, "handleAutomaticRefresh(Bool_t)" );
 
+                // start with automatic refresh ON
+                automatic->SetState(kButtonDown);
+                automatic->Toggled(true);
         }
 
         virtual ~gui() {

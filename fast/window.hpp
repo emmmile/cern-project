@@ -11,9 +11,9 @@ typedef unsigned int uint;
 enum type { POSITIVE, NEGATIVE, UNSET };
 
 ///
-/// \class window
-/// \brief This class represents a time window of values coming from a detector. It used, while analyzing the date,
-/// to remember a part of the data without having to read it again.
+/// \class peakwindow
+/// \brief This class represents a time window of values coming from a detector. It used, while analyzing the data,
+/// to remember a part of it without having to read it again.
 ///
 template<class F>
 class peakwindow {
@@ -77,7 +77,7 @@ public:
 
                 return integral( baseline ) > minimum_integral( baseline ) &&
                        ( ( detector == NEGATIVE && fabs( minimum() - baseline ) > step ) ||
-                         ( detector == NEGATIVE && fabs( maximum() - baseline ) > step ) );
+                         ( detector == POSITIVE && fabs( maximum() - baseline ) > step ) );
         }
 
         ///

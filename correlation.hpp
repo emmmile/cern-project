@@ -159,34 +159,71 @@ public:
                 return c[1];
         }
 
+        class sorter {
+                int size;
+                double* base;
+        public:
+                sorter( int size, double* C )
+                        : size( size ), base( C ) {
+                }
+
+                bool operator() ( const double* a, const double* b ) {
+                        return fabs(*a - 1.0) < fabs(*b - 1.0);
+                }
+        };
+
         void run ( void ) {
                 while ( 1 ) {
                         sleep( 5 );
 
                         boost::progress_timer elapsed;
                         lock();
-                        for ( int j = 0; j < plotsnumber(); ++j ) {
+                        int size = plotsnumber();
+                        double C[size * size];          // a correlation matrix
+                        fill( C, C + size * size, numeric_limits<double>::max() );
 
+                        for ( int j = 0; j < plotsnumber(); ++j ) {
                                 for ( int i = j + 1; i < plotsnumber(); ++i ) {
 
                                         TGraph* a = __data[j];
                                         TGraph* b = __data[i];
-                                        string first  = name( j );
-                                        string second = name( i );
+                                        //string first  = name( j );
+                                        //string second = name( i );
                                         //if ( !a || !b ) continue;
 
                                         double ab = c( a->GetN(), a->GetX(), a->GetY(), b->GetN(), b->GetX(), b->GetY() );
                                         double ba = c( b->GetN(), b->GetX(), b->GetY(), a->GetN(), a->GetX(), a->GetY() );
 
-                                        if ( ab * ba > 0.80 && ab * ba < 1.20 ) {
-                                                cout.precision( 10 );
-                                                cout << "[correlator] correlation between " << first << " and " << second << " is " << ab * ba << endl;
-                                        }
+                                        C[j * size + i] = ab * ba;
+                                        //if ( ab * ba > 0.80 && ab * ba < 1.20 ) {
+                                        //        cout.precision( 10 );
+                                        //        cout << "[correlator] correlation between " << first << " and " << second << " is " << ab * ba << endl;
+                                        //}
                                 }
+                        }
+
+                        // sorting pass, to print say the most 20 correlated pairs
+                        double* sortedC[size * size];
+                        for ( int i = 0; i < size * size; ++i )
+                                sortedC[i] = C + i;
+
+                        sort( sortedC, sortedC + size * size, sorter(size, C) );
+
+                        cout.precision( 10 );
+                        for ( int i = 0; i < 20; ++i ) {
+                                int j = sortedC[i] - C; // distance from the base of the array
+
+                                int first = j / size;   // go back to the indexes
+                                int second = j % size;
+                                if ( *sortedC[i] == numeric_limits<double>::max() ) break;
+
+                                cout << "[correlator] correlation between " << name(first) << " and " << name(second) << " is " << *sortedC[i] << endl;
                         }
                         unlock();
 
-                        cout << "[correlator] ";
+
+
+                        cout << "[correlator] "; // will print the elapsed time if a progress_timer is used
                 }
         }
 

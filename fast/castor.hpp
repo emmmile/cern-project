@@ -20,7 +20,7 @@ class castor {
 
         time_t       runstart;
         time_t       userstart;
-        correlator*         window;
+        correlator*  data;
 public:
         ///
         /// \brief Construct a \ref castor object, starting reading the data of the detectors.
@@ -28,11 +28,13 @@ public:
         /// \param path the location of the experiment directory on CASTOR.
         /// \param run the run number.
         /// \param out a stream where to write the (analyzed) data.
-        /// \param s starting time, it is actually used only for viewing on the GUI.
-        /// \param w pointer to the GUI window.
+        /// \param rs the run start time.
+        /// \param us the start time specified by the user.
+        /// \param d pointer to the correlator, where the final data is stored.
         ///
-        castor( const string& path, const int& run, fstream& out, time_t rs, time_t us, correlator* w )
-                : runstart( rs ), userstart( us ), window( w ) {
+        castor( const string& path, const int& run, fstream& out, time_t rs, time_t us, correlator* d )
+                : runstart( rs ), userstart( us ), data( d ) {
+
                 // open the file and get some informations, for example exact date and detectors numbers and names
                 theRunReader=new RunReader();
                 theRunReader->SetDirName(path);
@@ -40,34 +42,25 @@ public:
                 theRunReader->SetSegmentNumber(0); // the first segment is enough for us
                 info = theRunReader->GetStructure();
 
-                if ( !info ) {
-                        throw exception( );
-                }
+                if ( !info ) throw exception( );
 
-                //cerr << "[fast] Run " << run << " has " << info->NChannels << " channels:" << endl;
-                //cout << *info << endl;
-
-
-                // now I should have all the information needed for the future
-                for ( int i = 0; i < info->NChannels && i < 5; ++i ) {
-                        get( info->theChannelInfo[i].DetType, info->theChannelInfo[i].DetID, out );
+                // finally reads the data, one detector after the other
+                for ( int i = 0; i < info->NChannels; ++i ) {
+                        readDetector( info->theChannelInfo[i].DetType, info->theChannelInfo[i].DetID, out );
                 }
         }
 
 
-
-        ///
         /// \brief Read the data for a specific detector of the current run. After reading it runs the
         /// peak analyzer saving the results into \ref out.
         ///
         /// \param detector the detector name.
         /// \param id the detector id.
         /// \param out a stream where to write the (analyzed) data.
-        /// \param start starting time, it is actually used only for viewing on the GUI.
         ///
-        void get( const string& detector, const int& id, fstream& out ) {
+        void readDetector( const string& detector, const int& id, fstream& out ) {
                 cout << "[fast] Reading " << detector << id << "..." << endl;
-                // TODO check if detector and id are in info
+
                 theRunReader->SetDetName(detector);
                 theRunReader->SetDetID(id);
 
@@ -126,13 +119,12 @@ public:
                 out << "<" << detectorname << ", " << totalcount << ">\t";
                 out.flush();
 
-
-                window->lock();
-                window->addPoint( detectorname, runstart - userstart, totalcount );
-                window->unlock();
+                // send a value to the correlator (consequently also the GUI)
+                data->lock();
+                data->addPoint( detectorname, runstart - userstart, totalcount );
+                data->unlock();
 
                 cout << "[fast] " << detector << id << " has " << totalcount << " peaks." << endl;
-
         }
 };
 

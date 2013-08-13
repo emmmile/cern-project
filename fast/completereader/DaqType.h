@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <string.h>
 #include <cstdio>
 
 using namespace std;
@@ -83,7 +84,7 @@ typedef struct {
 
 
 
-typedef enum eXc { eXsend,eXreceive };	// exchange type
+enum eXc { eXsend,eXreceive };	// exchange type
 
 // channel definition for the ETEP digitizer modules
 // this is the setting for one channel and can

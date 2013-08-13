@@ -32,7 +32,7 @@ class slowreader {
         string dateformat;
         string outdir;
 
-        correlator* window;
+        correlator* data;
 
 
         sql::Driver *driver;
@@ -82,9 +82,9 @@ class slowreader {
                                         current_value = atof( res->getString( meta->getColumnLabel(i) ).c_str() );
                                         out << res->getString( meta->getColumnLabel(i) ) << "\t";
 
-                                        window->lock();
-                                        window->addPoint( meta->getColumnLabel(i), current_time - start, current_value );
-                                        window->unlock();
+                                        data->lock();
+                                        data->addPoint( meta->getColumnLabel(i), current_time - start, current_value );
+                                        data->unlock();
                                 }
                         }
 
@@ -105,11 +105,11 @@ public:
         ///
         /// \param s starting time.
         /// \param e ending time.
-        /// \param w a pointer to the gui window.
+        /// \param d a pointer to the correlator.
         /// \param out path of the output directory.
         ///
-        slowreader(  time_t s, time_t e, correlator* w, const string& out = "./output/" )
-                : start( s ), end( e ), window( w ), outdir( out ) {
+        slowreader(  time_t s, time_t e, correlator* d, const string& out = "./output/" )
+                : start( s ), end( e ), data( d ), outdir( out ) {
                 dateformat = "%Y-%m-%d %H:%M:%S";
         }
 
@@ -124,8 +124,8 @@ public:
 
                 string queryformat = "SELECT %s FROM %s WHERE %s >= \"%s\" AND %s <= \"%s\"";
 
-                string user = "ntof";
-                string tables[3] = { "Protons", "Cooling", "Radiation" };
+                string user = "ntof";   // the user of the mysql database
+                string tables[3] = { "Protons", "Cooling", "Radiation" }; // the tables to take
 
                 try {
                         mkdir( outdir.c_str(), 0777 );

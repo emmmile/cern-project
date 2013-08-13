@@ -17,7 +17,10 @@ SOURCES += \
     gzstream/gzstream.C \
     fast/completereader/unpackx.cpp \
     fast/completereader/unpack.cpp \
-    fast/completereader/header.cpp
+    fast/completereader/header.cpp \
+    fast/completereader/fio.cpp \
+    fast/completereader/main.cpp \
+    fast/completereader/misc.cpp
 
 OTHER_FILES += \
     SConstruct \
@@ -43,5 +46,9 @@ HEADERS += \
     gzstream/gzstream.h \
     correlation.hpp \
     fast/completereader/header.h \
-    fast/completereader/DaqType.h
+    fast/completereader/DaqType.h \
+    fast/completereader/fio.h \
+    fast/completereader/unpackx.h \
+    fast/completereader/misc.h \
+    fast/completereader/DaqDefs.h
 

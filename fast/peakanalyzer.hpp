@@ -15,15 +15,21 @@ enum status { START, BASELINE, PEAKRECORDING, GAMMAFLASH };
 ///
 template<class F>
 class peakanalyzer {
-        F beta, dv, dvthreshold, baseline, alpha, vthreshold;
-        peakwindow<F> last;
-        status detector_status;
-        type   detector_type;
-        string name;
+        F               beta;
+        F               alpha;
+        F               dv;
+        F               dvthreshold;
+        F               baseline;
+        F               vthreshold;
+
+        peakwindow<F>   last;
+        status          detector_status;
+        type            detector_type;
+        string          name;
 
         int peaksnumber;
         int typecounter;
-        static const int typethreshold = 128.0;
+        static const int typethreshold = 127.0;
 
         F oldtime, oldvalue;
 public:
