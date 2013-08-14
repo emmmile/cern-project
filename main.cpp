@@ -18,6 +18,8 @@ int main ( int argc, char** argv ) {
         string localdb = "./NTOFDB";
         string dburl = "ntofdaq.cern.ch";
         time_t starttime, endtime;
+        int    x = 3;
+        int    y = 3;
 
         string formatstring = "set date format, default is " + format;
         string dbstring = "set the url for the SLOW data db, default is " + dburl;
@@ -33,6 +35,8 @@ int main ( int argc, char** argv ) {
                 ("end,e", value<string>(&end), "set the ending date, according to the specified format with -f")
                 ("localdb,l", value<string>(&localdb), localdbstring.c_str())
                 ("db,d",value<string>(&dburl), dbstring.c_str())
+                ("x,x",value<int>(&x), "set the number of plots in the GUI")
+                ("y,y", value<int>(&y), "set the number of plots in the GUI")
         ;
 
         variables_map vm;
@@ -95,7 +99,7 @@ int main ( int argc, char** argv ) {
 
         TApplication app( "Viewer", &argc, argv );
         correlator dataholder;
-        gui* window = new gui( gClient->GetRoot(), start, end, 1440, 900, &dataholder );
+        gui* window = new gui( gClient->GetRoot(), start, end, 1440, 900, x, y, &dataholder );
 
 
         fastreader freader( starttime, endtime, &dataholder );

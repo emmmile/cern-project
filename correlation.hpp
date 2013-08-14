@@ -28,9 +28,9 @@ class correlator {
         typedef boost::bimap<string,int> bimaptype;
         typedef bimaptype::value_type pairtype;
 
-        mutex           __datamutex;
-        bimaptype       __detectors;      // stores the association name <-> index
-        vector<TGraph*> __data;           // stores the real data
+        mutex           datamutex;
+        bimaptype       detectors;      // stores the association name <-> index
+        vector<TGraph*> data;           // stores the real data
 
         // I'm using TGraph because otherwise I would have to keep two vectors for each detector (time and value)
         // and then duplicate the memory creating a TGraph for viewing purposes. In fact there is no constructor in
@@ -38,46 +38,46 @@ class correlator {
 
 public:
         void lock ( ) {
-                __datamutex.lock();
+                datamutex.lock();
         }
 
         void unlock( ) {
-                __datamutex.unlock();
+                datamutex.unlock();
         }
 
         const int plotsnumber ( ) const {
-                return __data.size();
+                return data.size();
         }
 
         TGraph* plot ( const int index ) const {
-                return __data[index];
+                return data[index];
         }
 
         const int index ( const string& name ) const {
-                assert( __detectors.left.count( name ) != 0 );
-                return __detectors.left.at( name );
+                assert( detectors.left.count( name ) != 0 );
+                return detectors.left.at( name );
         }
 
         const string& name ( const int index ) const {
-                assert( __detectors.right.count( index ) != 0 );
-                return __detectors.right.at( index );
+                assert( detectors.right.count( index ) != 0 );
+                return detectors.right.at( index );
         }
 
         void addPoint( const string& name, double t, double y ) {
-                if ( __detectors.left.count( name ) == 0 ) {
+                if ( detectors.left.count( name ) == 0 ) {
                         TGraph* newone = new TGraph();
                         newone->SetTitle( name.c_str() );
-                        int maxIndex = __data.size();
+                        int maxIndex = data.size();
 
-                        __detectors.insert( pairtype( name, maxIndex ) );
-                        __data.push_back( newone );
+                        detectors.insert( pairtype( name, maxIndex ) );
+                        data.push_back( newone );
                 }
 
                 // add a single point to the plot
-                int index = __detectors.left.at( name );
-                int n = __data[index]->GetN();
+                int index = detectors.left.at( name );
+                int n = data[index]->GetN();
                 //cout << "Adding " << name << " " << n << " " << t << " " << y << endl;
-                __data[index]->SetPoint( n, t, y );
+                data[index]->SetPoint( n, t, y );
         }
 
 
@@ -185,8 +185,8 @@ public:
                         for ( int j = 0; j < plotsnumber(); ++j ) {
                                 for ( int i = j + 1; i < plotsnumber(); ++i ) {
 
-                                        TGraph* a = __data[j];
-                                        TGraph* b = __data[i];
+                                        TGraph* a = data[j];
+                                        TGraph* b = data[i];
 
                                         double ab = c( a->GetN(), a->GetX(), a->GetY(), b->GetN(), b->GetX(), b->GetY() );
                                         double ba = c( b->GetN(), b->GetX(), b->GetY(), a->GetN(), a->GetX(), a->GetY() );

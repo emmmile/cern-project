@@ -21,7 +21,7 @@ class peakanalyzer {
         F               dv;
         F               dvthreshold;
         F               baseline;
-        F               vthreshold;
+        F               baselinethreshold;
 
         F               oldtime;
         F               oldvalue;
@@ -45,7 +45,7 @@ public:
                 // the value of the baseline, when the detector is in "idle"
                 baseline = 0.0; // EWMA
                 alpha = 1.0 / typethreshold;
-                vthreshold = 0.5; // standard deviation for the value, EWMA
+                baselinethreshold = 0.5; // standard deviation for the value, EWMA
 
                 // initial status
                 detector_status = START;
@@ -85,7 +85,7 @@ public:
 
                 baseline = alpha * value + ( 1.0 - alpha ) * baseline;
                 dvthreshold = alpha * fabs ( dv - currentdv ) + ( 1.0 - alpha ) * dvthreshold; // update the standard deviation for the derivative
-                vthreshold = alpha * fabs ( value - baseline ) + ( 1.0 - alpha ) * vthreshold; // update the standard deviation for the values
+                baselinethreshold = alpha * fabs ( value - baseline ) + ( 1.0 - alpha ) * baselinethreshold; // update the standard deviation for the values
         }
 
         ///
@@ -113,7 +113,7 @@ public:
                 case BASELINE:
                         baseline = alpha * value + ( 1.0 - alpha ) * baseline;
                         dvthreshold = beta * fabs ( dv - currentdv ) + ( 1.0 - beta ) * dvthreshold; // update the standard deviation for the derivative
-                        vthreshold = alpha * fabs ( value - baseline ) + ( 1.0 - alpha ) * vthreshold; // update the standard deviation for the values
+                        baselinethreshold = alpha * fabs ( value - baseline ) + ( 1.0 - alpha ) * baselinethreshold; // update the standard deviation for the values
 
                         // if I've not read enough samples to understand the detector type, then quit immediately
                         if ( typecounter < typethreshold )
@@ -138,8 +138,8 @@ public:
 
                         // and we are close to the baseline, it's not a peak.
                         // I simply empty the window to remember it.
-                        if ( fabs ( value - baseline ) < 3 * max ( vthreshold, 1.0 ) ) {
-                                if ( last.good( baseline, vthreshold, detector_type ) ) {
+                        if ( fabs ( value - baseline ) < 3 * max ( baselinethreshold, 1.0 ) ) {
+                                if ( last.good( baseline, baselinethreshold, detector_type ) ) {
                                         //cerr << "Good peak at " << last.minimum_time() << " [" << name << "].\n";
                                         //cerr << last.minimum_integral(baseline) << " " << last.integral( baseline ) << endl;
                                         ++peaksnumber;
@@ -163,7 +163,7 @@ public:
         friend ostream& operator<< ( ostream& out, const peakanalyzer& p ) {
                 out << "Current baseline is " << p.baseline << endl;
                 out << "Current dvthreshold is " << p.dvthreshold << endl;
-                out << "Current vthreshold is " << p.vthreshold << endl;
+                out << "Current vthreshold is " << p.baselinethreshold << endl;
                 out << "Number of peaks is " << p.peaks() << endl;
                 return out;
         }

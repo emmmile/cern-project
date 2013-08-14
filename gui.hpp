@@ -41,8 +41,8 @@ class gui : public TGMainFrame {
 
         correlator*             data;
 public:
-        gui( const TGWindow *p, const string& start, const string& end, int w, int h, correlator* holder )
-                : TGMainFrame( p, w, h ), x( 3 ), y( 3 ), data( holder ) {
+        gui( const TGWindow *p, const string& start, const string& end, int w, int h, int x, int y, correlator* holder )
+                : TGMainFrame( p, w, h ), x( x ), y( y ), data( holder ) {
                 //frame = new TGMainFrame( p, w, h );
                 int lateralFrameWidth = 200;
 

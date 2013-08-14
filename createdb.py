@@ -67,7 +67,7 @@ def parse ( lstr, year, path ):
 			segment = integers[1]
 
 			if segment == "0":
-			    #print( path + "/" + name )
+			  # use a more precise commad to get the creation date and time of the file
 				process = Popen(["xrd", "castorpublic", "stat", path + "/" + name], stdout=PIPE)
 				stdout, stderr = process.communicate()
 				if stderr is None:
@@ -112,7 +112,7 @@ def parsefiles ( files, path ):
 	
 	#out = []
 	
-	# final output is in the following format RUN DAY MONTH YEAR HOUR:MINITE TOTALSEGMENTS PATH
+	# final output is in the following format RUN TIME TOTALSEGMENTS PATH
 	# here I build a simple list of tuples where each tuple has as first element the run string
 	# and as second element the informations we want (still as a string)
 	for run in segments:
