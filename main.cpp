@@ -107,12 +107,10 @@ int main ( int argc, char** argv ) {
 
         thread fthread( &fastreader::read, freader, std::ref( dbfile ) );
         thread sthread( &slowreader::read, sreader, std::ref( dburl ) );
-        thread cthread( &correlator::run,  &dataholder );
 
         app.Run();
         sthread.join();
         fthread.join();
-        //cthread.join();
 
         return 0;
 }

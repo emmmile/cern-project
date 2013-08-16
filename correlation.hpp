@@ -18,152 +18,38 @@
 #include <boost/bimap.hpp>
 #endif
 
+#include "correlationentry.hpp"
 #include <vector>
 using namespace std;
 
 
 class correlator {
-// since this class uses heavily incompatible structures with rootcint I enclose everything with a guard
+        // since this class uses heavily incompatible structures with rootcint I enclose everything with a guard
 #ifndef __CINT__
-        typedef boost::bimap<string,int> bimaptype;
-        typedef bimaptype::value_type pairtype;
+        typedef boost::bimap<string,int>         bimaptype;
+        typedef bimaptype::value_type            pairtype;
+        typedef vector<correlationentry<double>> cvector;
+        typedef pair<TGraph*, cvector>           ventry;
 
         mutex           datamutex;
         bimaptype       detectors;      // stores the association name <-> index
-        vector<TGraph*> data;           // stores the real data
+        vector<ventry>  data;           // stores the real data and its correlations
+
+        double          twindow;
 
         // I'm using TGraph because otherwise I would have to keep two vectors for each detector (time and value)
         // and then duplicate the memory creating a TGraph for viewing purposes. In fact there is no constructor in
         // TGraph where the data is actually SHARED, see http://root.cern.ch/root/html/TGraph.html
 
-public:
-        void lock ( ) {
-                datamutex.lock();
-        }
-
-        void unlock( ) {
-                datamutex.unlock();
-        }
-
-        const int plotsnumber ( ) const {
-                return data.size();
-        }
-
-        TGraph* plot ( const int index ) const {
-                return data[index];
-        }
-
-        const int index ( const string& name ) const {
-                assert( detectors.left.count( name ) != 0 );
-                return detectors.left.at( name );
-        }
-
-        const string& name ( const int index ) const {
-                assert( detectors.right.count( index ) != 0 );
-                return detectors.right.at( index );
-        }
-
-        void addPoint( const string& name, double t, double y ) {
-                if ( detectors.left.count( name ) == 0 ) {
-                        TGraph* newone = new TGraph();
-                        newone->SetTitle( name.c_str() );
-                        int maxIndex = data.size();
-
-                        detectors.insert( pairtype( name, maxIndex ) );
-                        data.push_back( newone );
-                }
-
-                // add a single point to the plot
-                int index = detectors.left.at( name );
-                int n = data[index]->GetN();
-                //cout << "Adding " << name << " " << n << " " << t << " " << y << endl;
-                data[index]->SetPoint( n, t, y );
-        }
 
 
-        void interpolate ( const int an, double const* at, double const* av, const int bn, double const* bt, double const* bv, vector<double>& t, vector<double>& aa, vector<double>& bb ) {
-                double const* atend = at + an;
-                double const* btend = bt + bn;
-
-                double const* a = at;
-                double const* b = bt;
-                for ( ; a != atend && b != btend; ) {
-                        // if *b falls outside the interval..
-                        if ( ( a != at && *a > *b && *(a-1) > *b ) ||
-                                        ( a == at && *a > *b ) ) {
-                                swap( atend, btend );
-                                swap( a, b );
-                                swap( av, bv );
-                                //swap( aa , bb );
-                                aa.swap( bb );
-                        }
-
-                        while ( *a < *b && a != atend ) {
-                                ++a;
-                                ++av;
-                        }
-
-                        if ( a == atend ) break;
-
-                        if ( *a == *b ) {
-                                //cout << *av << " " << *bv << endl;
-                                t.push_back( *a );
-                                aa.push_back( *av );
-                                bb.push_back( *bv );
-                                ++b; ++bv;
-                                ++a; ++av;
-                        } else {
-                                // now *a is bigger time than *b, but *(a-1) is smaller
-                                // that is the time *b falls in the interval [*a, *(a-1)]
-                                double m = ( *av - *(av-1) ) / ( *a - *(a-1) );
-                                double ainterpolated = m * (*b - *(a-1)) + *(av-1);
-                                //cout << ainterpolated << " " << *bv << endl;
 
 
-                                t.push_back( *b );
-                                aa.push_back( ainterpolated );
-                                bb.push_back( *bv );
-                                ++b; ++bv;
-                        }
-                }
-
-                // final swap
-                if ( a > at && a < atend ); // ok
-                else {
-                        aa.swap( bb );
-                }
-        }
-
-
-        // find linear correlation coefficient between a (x) and b (y)
-        double c ( const int an, double const* at, double const* av, const int bn, double const* bt, double const* bv ) {
-                if ( !an || !bn ) return 0;
-
-
-                vector<double> t;
-                vector<double> a;
-                vector<double> b;
-                interpolate( an, at, av, bn, bt, bv, t, a, b );
-
-                int n = t.size();
-                if ( n <= 2 ) return 0;
-
-                TVectorD x; x.Use( n, &(a[0]) );
-                TVectorD y; y.Use( n, &(b[0]) );
-
-                TMatrixD A(n,2);
-                TMatrixDColumn(A,0) = 1.0;
-                TMatrixDColumn(A,1) = x;
-
-                const TVectorD c = NormalEqn(A,y);
-                return c[1];
-        }
-
-        class sorter {
+        class correlationsorter {
                 int size;
                 double* base;
         public:
-                sorter( int size, double* C )
+                correlationsorter( int size, double* C )
                         : size( size ), base( C ) {
                 }
 
@@ -172,51 +58,89 @@ public:
                 }
         };
 
-        void run ( void ) {
-                while ( 1 ) {
-                        sleep( 5 );
+public:
+        correlator( );
 
-                        boost::progress_timer elapsed;
-                        lock();
-                        int size = plotsnumber();
-                        double C[size * size];          // a correlation matrix
-                        fill( C, C + size * size, numeric_limits<double>::max() );
+        void lock ( );
+        void unlock( );
 
-                        for ( int j = 0; j < plotsnumber(); ++j ) {
-                                for ( int i = j + 1; i < plotsnumber(); ++i ) {
+        ///
+        /// \brief plotsnumber
+        /// \return the number of the detectors
+        ///
+        const int plotsnumber ( ) const;
 
-                                        TGraph* a = data[j];
-                                        TGraph* b = data[i];
+        ///
+        /// \brief plot
+        /// \param index the index of the detector in the data structure.
+        /// \return the data of the detector with a given index
+        ///
+        TGraph* plot ( const int index ) const;
 
-                                        double ab = c( a->GetN(), a->GetX(), a->GetY(), b->GetN(), b->GetX(), b->GetY() );
-                                        double ba = c( b->GetN(), b->GetX(), b->GetY(), a->GetN(), a->GetX(), a->GetY() );
+        ///
+        /// \brief index
+        /// \param name the name of the detector as a string
+        /// \return the index of the detector with the given name
+        ///
+        const int index ( const string& name ) const;
 
-                                        C[j * size + i] = ab * ba;
-                                }
-                        }
+        ///
+        /// \brief name
+        /// \param index the index of the detector in the data vector
+        /// \return the name of the detector with the given index
+        ///
+        const string& name ( const int index ) const;
 
-                        // sorting pass, to print say the most 20 correlated pairs
-                        double* viewOnC[size * size];
-                        for ( int i = 0; i < size * size; ++i ) viewOnC[i] = C + i;
+        ///
+        /// \brief addPoint
+        ///        Add a point to the data structure
+        /// \param name the name of the detectors
+        /// \param t the time of the new point
+        /// \param y the value of the new point
+        ///
+        void addPoint( const string& name, double t, double y );
 
-                        sort( viewOnC, viewOnC + size * size, sorter(size, C) );
+        ///
+        /// \brief updateCorrelation
+        ///        updates the existing correlation between detector i and j
+        /// \param i the index of the first detector, that can be used on the data vector
+        /// \param j the index of the second detector
+        ///
+        void updateCorrelation ( const int i, const int j );
 
-                        cout.precision( 10 );
-                        for ( int i = 0; i < 20; ++i ) {
-                                int j = viewOnC[i] - C; // distance from the base of the array
 
-                                int first = j / size;   // go back to the indexes
-                                int second = j % size;
-                                if ( *viewOnC[i] == numeric_limits<double>::max() ) break;
+        ///
+        /// \brief linear
+        ///        find linear correlation coefficient between A(t) and A(t)
+        /// \param an the number of points for the function A
+        /// \param at the begin of the time array for the function A
+        /// \param av the begin of the value array for the function A
+        /// \param bn the number of points for the function B
+        /// \param bt the times of B
+        /// \param bv the values of B
+        /// \return
+        ///
+        double linear ( const int an, double const* at, double const* av,
+                        const int bn, double const* bt, double const* bv );
 
-                                cout << "[correlator] correlation between " << name(first) << " and " << name(second) << " is " << *viewOnC[i] << endl;
-                        }
-                        unlock();
 
-                        cout << "[correlator] "; // will print the elapsed time if a progress_timer is used
-                }
-        }
-
+        ///
+        /// \brief interpolate
+        ///        find a linear interpolation for the points that don't have a correspondent time in one of
+        ///        the two plots
+        /// \param an the number of points for the function A
+        /// \param at the begin of the time array for the function A
+        /// \param av the begin of the value array for the function A
+        /// \param bn the number of points for the function B
+        /// \param bt the times of B
+        /// \param bv the values of B
+        /// \param t the output vector of times
+        /// \param aa the output vector of values of A
+        /// \param bb the output vector of values of B
+        ///
+        void interpolate ( const int an, double const* at, double const* av,
+                           const int bn, double const* bt, double const* bv,
+                           vector<double>& t, vector<double>& aa, vector<double>& bb );
 #endif
 };
 

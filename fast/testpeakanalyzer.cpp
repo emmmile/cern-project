@@ -66,7 +66,7 @@ int main( int argc, char** argv ) {
         cout << "File: " << input << endl;
 
         double time, value;
-        peakanalyzer<double> p( input );
+        peakanalyzer p( input, -1 );
         while ( (*sample) >> time >> value ) {
                 p.push( time, value );
         }

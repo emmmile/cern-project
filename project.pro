@@ -20,7 +20,15 @@ SOURCES += \
     fast/completereader/header.cpp \
     fast/completereader/fio.cpp \
     fast/completereader/main.cpp \
-    fast/completereader/misc.cpp
+    fast/completereader/misc.cpp \
+    fast/castor.cpp \
+    fast/fastreader.cpp \
+    slow/slowreader.cpp \
+    dateutils.cpp \
+    gui.cpp \
+    fast/peakanalyzer.cpp \
+    fast/peakwindow.cpp \
+    correlation.cpp
 
 OTHER_FILES += \
     SConstruct \
@@ -50,5 +58,6 @@ HEADERS += \
     fast/completereader/fio.h \
     fast/completereader/unpackx.h \
     fast/completereader/misc.h \
-    fast/completereader/DaqDefs.h
+    fast/completereader/DaqDefs.h \
+    correlationentry.hpp
 
