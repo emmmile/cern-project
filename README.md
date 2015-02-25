@@ -1,4 +1,4 @@
-## Finding linear correlations in the data of the nTOF facility
+## Finding linear correlations in the data of the nTOF facility at CERN
 
 ### The project
 
